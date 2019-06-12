@@ -1,0 +1,20 @@
+div.loginform-container {
+  width: 80%;
+  margin: 75px auto;
+  padding: 20px;
+
+  color: orange;
+  background-color: rgba(0,0,0,.55);
+  border: 2px solid gold;
+  border-radius: 5px;
+}
+
+span.loginform-title {
+  font-size: 25px;
+  color: inherit;
+}
+
+#loginform {
+  margin-top: 20px;
+  color: inherit;
+}

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block infotext %}
+  <div id='infotext'>
+    This is a place where you can test out poker algorithms
+    by sending a bot to play in a game against another bot or
+    against a live person.
+  </div>
+{% endblock %}
+
+{% block loginform %}
+  <div class='loginform-container'>
+    <span class='loginform-title'>Sign In</span>
+    <form id='loginform' action='' method='POST' novalidate>
+      {{ form.hidden_tag() }}
+      <p>
+        &nbsp;&nbsp;
+        {{ form.email.label }}:
+        {{ form.email(class_ = "futuristic-input-text") }}
+      </p>
+      <p>
+        {{ form.username.label }}:
+        {{ form.username(class_ = "futuristic-input-text") }}
+      </p>
+      <p>
+        {{ form.password.label }}:
+        {{ form.password(class_ = "futuristic-input-text") }}
+      </p>
+      <p>
+        {{ form.submit(class_ = "futuristic-input-button margin-top-10") }}
+      </p>
+    </form>
+  </div>
+{% endblock %}

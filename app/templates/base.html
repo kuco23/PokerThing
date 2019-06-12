@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PokerThing</title>
+  <meta charset='utf-8' name='viewport' content='width=device-width, initial-scale=1.0' />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Anonymous+Pro|Montez|Neucha&display=swap" />
+  <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='css/main.css') }}" />
+  <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='css/tools.css') }}" />
+  <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='css/navigation.css') }}" />
+  <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='css/content.css') }}" />
+  <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='css/loginform.css') }}" />
+  <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='css/futuristic-input.css') }}" />
+  <style></style>
+</head>
+<body>
+
+  <h1>Welcome to PokerThing</h1>
+
+  <div class='navigation'>
+    <span>home</span>
+    <span>tables</span>
+    <span>info</span>
+    <span>help</span>
+  </div>
+
+  <div class='content'>
+    {% block infotext %}{% endblock %}
+    {% block loginform %}{% endblock %}
+
+    <ul>
+      {% with messages = get_flashed_messages() %}
+      {% for message in messages %}
+        <li>{{ message }}</li>
+      {% endfor %}
+      {% endwith %}
+    </ul>
+
+  </div>
+
+</body>
+</html>
