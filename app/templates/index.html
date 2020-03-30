@@ -10,7 +10,7 @@
 
 {% block loginform %}
   <div class='loginform-container'>
-    <span class='loginform-title'>Sign In</span>
+    <span class='loginform-title'>Sign In or Sign Up</span>
     <form id='loginform' action='' method='POST' novalidate>
       {{ form.hidden_tag() }}
       <p>
@@ -28,6 +28,7 @@
       </p>
       <p>
         {{ form.submit(class_ = "futuristic-input-button margin-top-10") }}
+        {{ form.submit(class_ = "futuuristic-input-button margin-top-10") }}
       </p>
     </form>
   </div>
