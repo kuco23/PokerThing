@@ -1,0 +1,25 @@
+{% extends "index.html" %}
+
+{% block loginform %}
+  <div class='loginform-container'>
+    <span class='loginform-title'>Sign In or Sign Up</span>
+    <form id='loginform' action='/login' method='POST' novalidate>
+      <p>
+        <label for='email'>&nbsp;&nbsp;&nbsp;Email: </label>
+        <input type = 'email' name = 'email' id = 'email' class = 'futuristic-input-text' />
+      </p>
+      <p>
+        <label for = 'username'>Username: </label>
+        <input type = 'text' name = 'username' id = 'username' class = 'futuristic-input-text' />
+      </p>
+      <p>
+        <label for = 'password'>Password: </label>
+        <input type = 'password' name = 'password' id = 'password' class = 'futuristic-input-text' />
+      </p>
+      <input 
+        required type = 'submit' name = 'signup' id = 'signup' value = 'sign up' minlength = 6
+        class = 'futuristic-input-button margin-top-10' 
+      />
+    </form>
+  </div>
+{% endblock %}

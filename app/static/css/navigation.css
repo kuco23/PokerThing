@@ -21,4 +21,6 @@ div.navigation > span {
 div.navigation > span:hover {
   cursor: pointer;
   color: white;
+  text-shadow: 2px 2px 2px black;
+  transition: all 0.2s;
 }

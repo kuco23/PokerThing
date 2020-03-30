@@ -1,13 +1,22 @@
-from flask import render_template, flash, redirect
+from flask import render_template, redirect, request, make_response
 from app import app
-from app.forms import LoginForm
 
 @app.route('/index', methods=['GET', 'POST'])
 @app.route('/', methods=['GET', 'POST'])
+def index():
+    username = request.cookies.get('user')
+    return render_template(
+        'index.html' if username else 'login.html'
+    )
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    return render_template('login.html')
+
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    user = {'name' : 'john'}
-    form = LoginForm()
-    if form.validate_on_submit():
-        flash('Login requested for user {}'.format(form.username.data))
-        return redirect('/index')
-    return render_template('index.html', form=form)
+    user = request.form['username']
+    resp = make_response(render_template('base.html'))
+    resp.set_cookie('user', user)
+    return resp
+

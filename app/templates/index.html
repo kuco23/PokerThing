@@ -1,35 +1,11 @@
 {% extends "base.html" %}
 
-{% block infotext %}
-  <div id='infotext'>
-    This is a place where you can test out poker algorithms
-    by sending a bot to play in a game against another bot or
-    against a live person.
-  </div>
-{% endblock %}
-
-{% block loginform %}
-  <div class='loginform-container'>
-    <span class='loginform-title'>Sign In or Sign Up</span>
-    <form id='loginform' action='' method='POST' novalidate>
-      {{ form.hidden_tag() }}
-      <p>
-        &nbsp;&nbsp;
-        {{ form.email.label }}:
-        {{ form.email(class_ = "futuristic-input-text") }}
-      </p>
-      <p>
-        {{ form.username.label }}:
-        {{ form.username(class_ = "futuristic-input-text") }}
-      </p>
-      <p>
-        {{ form.password.label }}:
-        {{ form.password(class_ = "futuristic-input-text") }}
-      </p>
-      <p>
-        {{ form.submit(class_ = "futuristic-input-button margin-top-10") }}
-        {{ form.submit(class_ = "futuuristic-input-button margin-top-10") }}
-      </p>
-    </form>
-  </div>
+{% block index %}
+	<h1>Welcome to PokerThing</h1>
+	<div class='navigation'>
+		<span href='/login'>Log In</span>
+		<span href='/signup'>Sign Up</span>
+		<span>FAQ</span>
+		<span>API docs</span>
+	</div>
 {% endblock %}

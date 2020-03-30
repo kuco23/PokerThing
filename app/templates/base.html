@@ -14,27 +14,19 @@
 </head>
 <body>
 
-  <h1>Welcome to PokerThing</h1>
+  {% block index %}{% endblock %}
 
-  <div class='navigation'>
-    <span>home</span>
-    <span>tables</span>
-    <span>info</span>
-    <span>help</span>
+  <div class='content'>
+    This is a minimalistic site for playing poker. All the player data is public.
   </div>
 
   <div class='content'>
-    {% block infotext %}{% endblock %}
     {% block loginform %}{% endblock %}
+    {% block signupform %}{% endblock %}
+  </div>
 
-    <ul>
-      {% with messages = get_flashed_messages() %}
-      {% for message in messages %}
-        <li>{{ message }}</li>
-      {% endfor %}
-      {% endwith %}
-    </ul>
-
+  <div class='content'>
+      
   </div>
 
 </body>
