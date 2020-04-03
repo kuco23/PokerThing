@@ -31,8 +31,9 @@ def sseFormat(data : dict):
 
 @app.route('/stream', methods=['GET'])
 def stream():
+    user = request.cookies.get('user')
     def listenstream():
-        yield sseFormat({'rand': str(random.random())})
+        yield sseFormat({'rand': user})
         sleep(0.5)
     return Response(response=listenstream(), content_type='text/event-stream')
 
