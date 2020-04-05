@@ -1,4 +1,5 @@
 import json, random
+from hashlib import sha256
 from time import sleep
 from flask import (
     render_template, redirect, request,
@@ -6,28 +7,53 @@ from flask import (
 )
 from app import app
 
-@app.route('/index', methods=['GET', 'POST'])
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    username = request.cookies.get('user')
-    return render_template(
-        'index.html' if username else 'login.html'
+def checkData(form):
+    return (
+        'username' in form and
+        'password' in form and
+        'email' in form
     )
-
-@app.route('/signup', methods=['GET', 'POST'])
-def signup():
-    return render_template('login.html')
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    user = request.form['username']
-    resp = make_response(render_template('base.html'))
-    resp.set_cookie('user', user)
-    return resp
 
 def sseFormat(data : dict):
     jsn = json.dumps(data)
     return f'event: listen\ndata: {jsn}\n\n'
+
+@app.route('/index', methods=['GET'])
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    username = request.cookies.get('username')
+    return render_template('index.html', username = username)
+
+@app.route('/login', methods=['GET'])
+def login():
+    return render_template('login.html')
+
+@app.route('/signup', methods=['GET'])
+def signup():
+    return render_template('signup.html')
+
+@app.route('/acceptLoginForm', methods = ['POST'])
+def acceptLoginForm():
+    if checkData(request.form):
+        return render_template('index.html')
+    else:
+        return render_template('login.html')
+
+@app.route('/acceptSignupForm', methods = ['POST'])
+def acceptSignupForm():
+    if checkData(request.form):
+        username = request.form['username']
+        resp = make_response(redirect('/index'))
+        resp.set_cookie('username', username)
+        return resp
+    else:
+        return render_template('signup.html')
+
+@app.route('/signOut', methods = ['GET'])
+def signOut():
+    resp = make_response(redirect('/index'))
+    resp.delete_cookie('username')
+    return resp
 
 @app.route('/stream', methods=['GET'])
 def stream():

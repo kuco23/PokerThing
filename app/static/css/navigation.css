@@ -13,12 +13,14 @@ div.navigation {
   border-top: 2px solid black;
   border-bottom: 2px solid black;
 }
-div.navigation > span {
+div.navigation > a {
   padding: 10px 15px 10px 15px;
+  text-decoration: none;
+  color: inherit;
   font-family: 'Neucha', monospace;
   font-size: 22px;
 }
-div.navigation > span:hover {
+div.navigation > a:hover {
   cursor: pointer;
   color: white;
   text-shadow: 2px 2px 2px black;

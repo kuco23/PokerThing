@@ -8,7 +8,7 @@
   <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='css/main.css') }}" />
   <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='css/tools.css') }}" />
   <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='css/navigation.css') }}" />
-  <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='css/content.css') }}" />
+  <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='css/base.css') }}" />
   <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='css/loginform.css') }}" />
   <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='css/futuristic-input.css') }}" />
   <style></style>
@@ -27,8 +27,13 @@
     {% block signupform %}{% endblock %}
   </div>
 
-  <div class='content'>
-      
+  <div class = 'usermark'>
+    {% if username %}
+    Signed in as {{ username }} <br />
+    <a href="/signOut">Sign Out</a>
+    {% else %}
+    You aren't signed in yet
+    {% endif %}
   </div>
 
 </body>
