@@ -27,14 +27,18 @@
     {% block signupform %}{% endblock %}
   </div>
 
-  <div class = 'usermark'>
-    {% if username %}
+  {% if username %}
+  <div class = "usermark">
     Signed in as {{ username }} <br />
-    <a href="/signOut">Sign Out</a>
-    {% else %}
-    You aren't signed in yet
-    {% endif %}
+    <a class="red_hover" href="/signout">Sign Out</a>
   </div>
+  {% else %}
+  <div class = "usermark ">
+    You are not signed in<br />
+    <a class="lime_hover" href="/login">Log In</a>
+    <a class="lime_hover" href="/signup">Sign Up</a>
+  </div>
+  {% endif %}
 
 </body>
 </html>

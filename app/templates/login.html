@@ -3,19 +3,16 @@
 {% block loginform %}
   <div class='loginform-container'>
     <span class='loginform-title'>Log In</span>
-    <form id='loginform' action='/acceptLoginForm' method='POST' novalidate>
+    <form id='loginform' action='/acceptLoginForm' method='POST'>
       <p>
         <label for = 'username'>Username: </label>
-        <input type = 'text' name = 'username' id = 'username' class = 'futuristic-input-text' />
+        <input required type = 'text' name = 'username' id = 'username'  minlength = 4 class = 'futuristic-input-text' />
       </p>
       <p>
         <label for = 'password'>Password: </label>
-        <input type = 'password' name = 'password' id = 'password' class = 'futuristic-input-text' />
+        <input  required type = 'password' name = 'password' id = 'password' minlength = 6 class = 'futuristic-input-text' />
       </p>
-      <input 
-        required type = 'submit' name = 'signup' id = 'signup' value = 'Log In' minlength = 6
-        class = 'futuristic-input-button margin-top-10' 
-      />
+      <input type = 'submit' name = 'signup' id = 'signup' value = 'Log In' class = 'futuristic-input-button margin-top-10' />
     </form>
   </div>
 {% endblock %}

@@ -1,7 +1,10 @@
+import sqlite3
 from flask import Flask
-from .config import Config
+from .lib import *
+from . import config
 
 app = Flask(__name__)
-app.config.from_object(Config)
+app.config['SECRET_KEY'] = 'NotImplemented'
+con = sqlite3.connect(config.DATABASE_PATH)
 
 from . import routes

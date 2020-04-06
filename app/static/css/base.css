@@ -18,6 +18,3 @@ div.usermark > a {
   text-decoration: none;
   color: inherit;
 }
-div.usermark > a:hover {
-  color: red;
-}

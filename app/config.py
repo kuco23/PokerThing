@@ -1,5 +1,29 @@
-import os
-from random import getrandbits
+from pathlib import Path
+import configparser
 
-class Config:
-    SECRET_KEY = os.environ.get('SECRET_KEY') or str(getrandbits(128))
+base = 'app/config'
+config_files = [
+    'environment.ini',
+    'game_settings.ini'
+]
+config_paths = list(map(
+    lambda file: Path(base) / Path(file),
+    config_files
+))
+
+cfg = configparser.ConfigParser()
+cfg.read(config_paths, encoding='utf-8')
+
+section = 'game_money'
+keys = cfg.options(section)
+locals().update(dict(zip(
+    map(lambda key: key.upper(), keys),
+    map(lambda key: cfg.getint(section, key), keys)
+)))
+
+section = 'database'
+keys = cfg.options(section)
+locals().update(dict(zip(
+    map(lambda key: key.upper(), keys),
+    map(lambda key: cfg.get(section, key), keys)
+)))
