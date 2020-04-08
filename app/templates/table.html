@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block table %}
+
+<div id = 'table'>
+    <input type=text name='message' id='message' />
+    <button type=submit name='send' id='send'>Send</button>
+    <div id='message_board'>
+    </div>
+</div>
+
+<script>
+    'use strict'
+    let message_board = $("#message_board");
+    let source = new EventSource("/stream");
+    source.addEventListener("listen", function(e) {
+        let data = JSON.parse(e.data);
+        console.log(data);
+        message_board.append(
+            data.author + ": " + data.message + "<br />"
+        );
+    });
+    let message = $('#message');
+    $('#send').click(function() {
+        $.ajax('/message', {
+            type: 'POST',
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json',
+            data: JSON.stringify({message: message.val()}),
+            timeout: 500,
+            success: function (data, status, xhr) {console.log("Success");},
+            error: function (jqXhr, textStatus, errorMessage) {},
+        })
+    });
+</script>
+
+{% endblock %}

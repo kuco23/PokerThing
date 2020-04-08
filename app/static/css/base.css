@@ -1,7 +1,11 @@
 div.content {
-  max-width: 750px;
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: center;
   margin: auto;
-  padding: 8px;
+  padding: 3rem;
+  max-width: 80%;
+  text-align: center;
   font-family: 'Anonymous Pro', monospace;
 }
 div.usermark {
@@ -17,4 +21,11 @@ div.usermark {
 div.usermark > a {
   text-decoration: none;
   color: inherit;
+}
+div.errors {
+  padding: 5px;
+  font-family: monospace;
+  color: Red;
+  background-color: black;
+  border: 2px solid white;
 }

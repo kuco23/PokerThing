@@ -1,27 +1,42 @@
+div.loginform-container {
+  width: 50%;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+  color: orange;
+  background-color: rgba(0,0,0,.55);
+  border: 2px solid gold;
+  border-radius: 5px;
+}
+span.loginform-title {
+  font-size: 25px;
+  color: inherit;
+}
+#loginform {
+  margin-top: 20px;
+  color: inherit;
+}
+
 input.futuristic-input-text {
   min-width: 50%;
   padding: 2px 4px;
-
   color: inherit;
   background-color: rgba(0,0,0,.1);
   border: 2px solid rgba(256,256,256,.1);
   border-radius: 5px;
-
   transition: border 0.8s;
 }
 input.futuristic-input-text:focus {
   border: 2px solid rgba(256,256,256,.4);
 }
-
 input.futuristic-input-button {
   width: 25%;
   padding: 4px;
-
   color: rgba(256,0,0,.4);
   background-color: rgba(0,0,0,.1);
   border: 2px solid rgba(256,0,0,.4);
   border-radius: 5px;
-
   transition: border 0.8s, color 0.8s;
 }
 input.futuristic-input-button:hover,

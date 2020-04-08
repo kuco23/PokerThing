@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block database %}
+<div style='margin: auto; width: 50%;'>
+	<div class='table_choice'>
+		<button id='accounts'>Accounts</button>
+		<button id='playerdb'>Player Actions</button>
+	</div>
+	<label for='text'>Search:&nbsp;&nbsp;</label><input class='futuristic-input-text' type='text' />
+</div>
+<div class='content database_table'>
+	<table id='table_repr'></table>
+</div>
+
+<script>
+	let table_repr = $('#table_repr');
+	$('#accounts').click(function() {
+		$.ajax('/database', {
+            type: 'POST',
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json',
+            data: JSON.stringify({table: 'accounts'}),
+            timeout: 500,
+            success: function (data, status, xhr) {
+				table_repr.html('<tr>');
+				data.headers.forEach(function(x) {
+					table_repr.append('<th>' + x + '</th>');
+				});
+				table_repr.append('</tr>');
+				data.table.forEach(function(row) {
+					table_repr.append('<tr>');
+					row.forEach(function (td) {
+						table_repr.append('<td>' + td + '</td');
+					});
+					table_repr.append('</tr>');
+				});
+			},
+            error: function (jqXhr, textStatus, errorMessage) {
+				console.log("Error");
+			},
+		})
+	})
+</script>
+{% endblock %}

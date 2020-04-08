@@ -46,10 +46,10 @@ def selectWhere(connection, tbl, **pairs):
     cursor.execute(f'SELECT * FROM {tbl} WHERE {condition}')
     return [ntuple(*row) for row in cursor.fetchall()]
 
-def selectColumn(connection, tbl, colname):
+def selectColumns(connection, tbl, cols):
     cursor = connection.cursor()
-    cursor.execute(f'SElECT {colname} FROM {tbl}')
-    return [elt for elt, *_ in cursor.fetchall()]
+    cursor.execute(f'SElECT {",".join(cols)} FROM {tbl}')
+    return cursor.fetchall()
 
 if __name__ == '__main__':
     with sqlite3.connect('app/database/game.db') as conn:

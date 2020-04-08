@@ -3,7 +3,7 @@
 {% block loginform %}
   <div class='loginform-container'>
     <span class='loginform-title'>Log In</span>
-    <form id='loginform' action='/acceptLoginForm' method='POST'>
+    <form id='loginform' action='/login' method='POST'>
       <p>
         <label for = 'username'>Username: </label>
         <input required type = 'text' name = 'username' id = 'username'  minlength = 4 class = 'futuristic-input-text' />
@@ -15,4 +15,11 @@
       <input type = 'submit' name = 'signup' id = 'signup' value = 'Log In' class = 'futuristic-input-button margin-top-10' />
     </form>
   </div>
+  {% if errors %}
+  <div class = 'errors'>
+    {% for error in errors %}
+    <span>{{ error }}</span><br />
+    {% endfor %}
+  </div>
+  {% endif %}
 {% endblock %}
