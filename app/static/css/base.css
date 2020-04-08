@@ -17,6 +17,7 @@ div.usermark {
   color: powderblue;
   font-size: 18px;
   font-family: monospace;
+  background-color: inherit
 }
 div.usermark > a {
   text-decoration: none;

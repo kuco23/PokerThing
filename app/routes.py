@@ -6,6 +6,7 @@ from flask import (
     render_template, redirect, request,
     make_response, Response, url_for, jsonify
 )
+from .lib import DbTable
 from app import app, con
 from app import config, sqlsup
 
@@ -16,7 +17,7 @@ def checkLogin(form):
     password = form.get('password').encode('utf-8')
     passhash = sha256(password).hexdigest()
     account = sqlsup.selectWhere(
-        con, 'accounts', 
+        con, DbTable.ACCOUNTS, 
         username = form.get('username'), 
         password_hash = passhash
     )
@@ -24,7 +25,7 @@ def checkLogin(form):
 
 def checkSignup(form):
     username_in_table = sqlsup.selectWhere(
-        con, 'accounts', 
+        con, DbTable.ACCOUNTS, 
         username = form.get('username')
     )
     return not username_in_table
@@ -33,7 +34,7 @@ def userSignup(form):
     password = form.get('password').encode('utf-8')
     passhash = sha256(password).hexdigest()
     sqlsup.insert(
-        con, 'accounts', 
+        con, DbTable.ACCOUNTS, 
         username = form.get('username'),
         password_hash = passhash,
         email = form.get('email'),
@@ -83,7 +84,7 @@ def signout():
 def database():
     if request.method == 'POST':
         table = request.json.get('table')
-        columns = ['username', 'money']
+        columns = ['username', 'money', 'email', 'password_hash']
         rows = sqlsup.selectColumns(con, table, columns)
         return jsonify({'table' : rows, 'headers': columns})
     elif request.method == 'GET':
