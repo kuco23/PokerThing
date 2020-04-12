@@ -1,33 +1,43 @@
-{% extends "base.html" %}
+{% extends "template_base" %}
 
 {% block database %}
-<div style='margin: auto; width: 50%;'>
-	<div class='table_choice'>
-		<button id='accounts'>Accounts</button>
-		<button id='playerdb'>Player Actions</button>
-	</div>
-	<label for='text'>Search:&nbsp;&nbsp;</label><input class='futuristic-input-text' type='text' />
+<div id='table-specs'>
+	<span id='table-search'>
+		<label for='text'>Search:&nbsp;&nbsp;</label>
+		<input id='search-input' class='futuristic-input-text' type='text'/>
+	</span> 
+	&nbsp;&nbsp;&nbsp;&nbsp;in&nbsp;&nbsp;&nbsp;&nbsp;
+	<span id='table-choice'>
+		<select id='table-select'>
+			<option>Accounts</option>
+			<option>Players</option>
+			<option>PokerTables</option>
+			<option>Actions</option>
+		</select>
+	</span>
 </div>
-<div class='content database_table'>
-	<table id='table_repr'></table>
+<div class='content grid-table'>
+	<table id='table-repr'></table>
 </div>
 
 <script>
-	let table_repr = $('#table_repr');
-	$('#accounts').click(function() {
+	let table_option = $('#table-select');
+	let table_repr = $('#table-repr');
+	$('#table-select > option').click(function() {
+		let option = table_option.find(':selected').text();
 		$.ajax('/database', {
             type: 'POST',
             contentType: 'application/json; charset=utf-8',
             dataType: 'json',
-            data: JSON.stringify({table: 'accounts'}),
+            data: JSON.stringify({table: option}),
             timeout: 2000,
             success: function (data, status, xhr) {
 				table_repr.html('<tr>');
-				data.headers.forEach(function(x) {
+				data.columns.forEach(function(x) {
 					table_repr.append('<th>' + x + '</th>');
 				});
 				table_repr.append('</tr>');
-				data.table.forEach(function(row) {
+				data.rows.forEach(function(row) {
 					table_repr.append('<tr>');
 					row.forEach(function (td) {
 						table_repr.append('<td>' + td + '</td');
@@ -38,7 +48,7 @@
             error: function (jqXhr, textStatus, errorMessage) {
 				console.log("Error");
 			},
-		})
-	})
+		});
+	});
 </script>
 {% endblock %}

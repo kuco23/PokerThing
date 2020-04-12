@@ -1,4 +1,4 @@
-div.loginform-container {
+div.form-container {
   width: 50%;
   margin-top: 2rem;
   margin-bottom: 2rem;
@@ -9,11 +9,11 @@ div.loginform-container {
   border: 2px solid gold;
   border-radius: 5px;
 }
-span.loginform-title {
+span.form-title {
   font-size: 25px;
   color: inherit;
 }
-#loginform {
+#form {
   margin-top: 20px;
   color: inherit;
 }
@@ -44,4 +44,8 @@ input.futuristic-input-button:active {
   cursor: pointer;
   color: inherit;
   border: 2px solid orange;
+}
+input.futuristic-input-select {
+  border: 2px solid rgba(256,256,256,.4);
+  border-radius: 5px;
 }

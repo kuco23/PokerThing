@@ -1,11 +1,11 @@
-div.database_table > table {
+div.grid-table > table {
   padding: 0;
   margin: 0;
   border-collapse: seperate;
   border-spacing: 0.15rem;
 }
-div.database_table > table th,
-div.database_table > table td {
+div.grid-table > table th,
+div.grid-table > table td {
   padding: 1rem;
   min-width: 4rem;
   height: 1.5rem;
@@ -13,33 +13,17 @@ div.database_table > table td {
   background-color: rgba(0, 0, 0, .4);
   border: 2px solid black;
 }
-div.database_table > table th {
+div.grid-table > table th {
   color: orange;
   font-weight: normal;
 }
-div.database_table > table td:hover {
+div.grid-table > table td:hover {
   cursor: default;
   border: 2px solid orange;
   transition: border 1s;
 }
 
-div.table_choice {
-  display: flex;
-  flex-flow: row wrap;
-  justify-content: center;
-  margin: 1rem;
-}
-div.table_choice > button {
-  display: inline-block;
-  margin: 0.5rem 0.2rem 0.5rem 0.2rem;
-  padding: 0.5rem 1rem 0.5rem 1rem;
-  color: white;
-  font-size: 1rem;
-  background-color: rgba(0, 0, 0, 0.4);
-  border: 2px solid black;
-}
-div.table_choice > button:hover {
-  cursor: pointer;
-  border: 2px solid orange;
-  transition: border 1s;
+#table-specs {
+  margin-top: 3rem;
+  margin-bottom: 3rem;
 }

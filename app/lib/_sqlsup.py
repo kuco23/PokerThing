@@ -50,7 +50,7 @@ dbtables = dict(zip(
     ]
 ))
 
-rowtuples = dict(zip(DbTable, map(
+table_columns = dict(zip(DbTable, map(
     namedtuple, [table.name for table in DbTable], [
         ['id', 'username', 'password_hash', 'email', 'money'],
         ['id', 'blind'], ['id', 'account_id', 'pokertable_id'],
@@ -77,7 +77,7 @@ def insert(connection, tbl, **pairs):
     connection.commit()
 
 def selectWhere(connection, tbl, **pairs):
-    ntuple = rowtuples[tbl]
+    ntuple = table_columns[tbl]
     condition = ' AND '.join(
         f'{key}={repr(val)}' for key, val in pairs.items()
     )
@@ -87,6 +87,10 @@ def selectWhere(connection, tbl, **pairs):
 
 def selectColumns(connection, tbl, cols):
     cursor = connection.cursor()
-    cursor.execute(f'SElECT {",".join(cols)} FROM {tbl}')
+    cursor.execute(f'SElECT {",".join(cols)} FROM {tbl.name}')
     return cursor.fetchall()
 
+def getTable(connection, tbl):
+    cursor = connection.cursor()
+    cursor.execute(f'SELECT * FROM {tbl.name}')
+    return table_columns[tbl]._fields, cursor.fetchall()

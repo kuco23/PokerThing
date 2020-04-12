@@ -1,0 +1,31 @@
+{% extends "template_base" %}
+
+{% block signinform %}
+  <div class='form-container'>
+    <span class='form-title'>Sign In</span>
+    <form id='signinform' action='/signin' method='POST'>
+      <p>
+        <label for = 'username'>Username: </label>
+        <input 
+          required type = 'text' name = 'username' id = 'username'  
+          maxlength = 10 minlength = 4 class = 'futuristic-input-text' />
+      </p>
+      <p>
+        <label for = 'password'>Password: </label>
+        <input  
+          required type = 'password' name = 'password' id = 'password' 
+          minlength = 6 class = 'futuristic-input-text' />
+      </p>
+      <input 
+        type = 'submit' name = 'signin' id = 'signin' value = 'Sign In' 
+        class = 'futuristic-input-button margin-top-10' />
+    </form>
+  </div>
+  {% if errors %}
+  <div class = 'errors'>
+    {% for error in errors %}
+    <span>{{ error }}</span><br />
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endblock %}

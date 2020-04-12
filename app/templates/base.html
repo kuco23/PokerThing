@@ -5,37 +5,39 @@
   <meta charset='utf-8' name='viewport' content='width=device-width, initial-scale=1.0' />
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Anonymous+Pro|Montez|Neucha&display=swap" />
-  <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='css/tools.css') }}" />
-  <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='css/main.css') }}" />
-  <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='css/base.css') }}" />
-  <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='css/sections.css') }}" />
-  <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='css/forms.css') }}" />
-  <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='css/database.css') }}" />
-  <style></style>
+  <link rel='stylesheet' type='text/css' href="css/tools.css" />
+  <link rel='stylesheet' type='text/css' href="css/main.css" />
+  <link rel='stylesheet' type='text/css' href="css/base.css" />
+  <link rel='stylesheet' type='text/css' href="css/sections.css" />
+  <link rel='stylesheet' type='text/css' href="css/forms.css" />
+  <link rel='stylesheet' type='text/css' href="css/database.css" />
 </head>
 <body>
 
-  {% block index %}{% endblock %}
+  {% block indextitle %}{% endblock %}
+
+  <div class='sections'>
+    <a href='/base'>Home</a>
+		<a href='/table'>Tables</a>
+    <a href='/database'>Database</a>
+		<a>About</a>
+    <a>API docs</a>
+    {% if username %}
+    <a class='red_hover' href='/signout'>Sign Out ({{ username }})</a>
+    {% else %}
+    <a class="lime_hover" href="/signin">Sign In</a>
+    <a class="lime_hover" href="/signup">Sign Up</a>
+    {% endif %}
+  </div>
+
+  {% block indexcontent %}{% endblock %}
   {% block database %}{% endblock %}
   {% block table %}{% endblock %}
 
   <div class='content'>
-    {% block loginform %}{% endblock %}
+    {% block signinform %}{% endblock %}
     {% block signupform %}{% endblock %}
   </div>
-
-  {% if username %}
-  <div class = "usermark">
-    Signed in as {{ username }} <br />
-    <a class="red_hover" href="/signout">Sign Out</a>
-  </div>
-  {% else %}
-  <div class = "usermark ">
-    You are not signed in<br />
-    <a class="lime_hover" href="/login">Log In</a> or 
-    <a class="lime_hover" href="/signup">Sign Up</a>
-  </div>
-  {% endif %}
 
 </body>
 </html>

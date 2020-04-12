@@ -1,13 +1,10 @@
 {% extends "base.html" %}
 
-{% block index %}
-	<h1>PokerThing</h1>
-	<div class='sections'>
-		<a href='/table'>Tables</a>
-		<a href='/database'>Database</a>
-		<a>About</a>
-		<a>API docs</a>
-	</div>
+{% block indextitle %}
+<h1>PokerThing</h1>
+{% endblock %}
+
+{% block indexcontent %}
 	<div class='content'>
 		This is a minimalistic site for playing poker. All the player data is public.
 	</div>

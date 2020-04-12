@@ -8,18 +8,15 @@ div.content {
   text-align: center;
   font-family: 'Anonymous Pro', monospace;
 }
-div.usermark {
-  position: fixed;
-  top: 0;
-  right: 0;
-  padding: 4px;
+span.usermark {
+  padding: 0.5rem;
   text-align: right;
-  color: powderblue;
-  font-size: 18px;
+  font-size: 1rem;
   font-family: monospace;
-  background-color: inherit
+  color: black;
+  background-color: transparent;
 }
-div.usermark > a {
+span.usermark > a {
   text-decoration: none;
   color: inherit;
 }

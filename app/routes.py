@@ -1,19 +1,33 @@
-import json, sqlite3
-from pathlib import Path
+import json, sqlite3, time
 from hashlib import sha256
-from time import sleep
-from flask import (
-    render_template, redirect, request,
-    make_response, Response, url_for, jsonify
-)
+from jinja2 import DictLoader
+from sanic import response
+from jinja2_sanic import template, render_template, setup
 from .lib import DbTable
 from app import app, con
-from app import config, sqlsup
+from app import config, sqlsup, DbTable
 
 users = set()
 recv = dict()
 
-def checkLogin(form):
+app.static('/css/main.css', 'app/static/css/main.css')
+app.static('/css/base.css', 'app/static/css/base.css')
+app.static('/css/sections.css', 'app/static/css/sections.css')
+app.static('/css/forms.css', 'app/static/css/forms.css')
+app.static('/css/database.css', 'app/static/css/database.css')
+app.static('/css/tools.css', 'app/static/css/tools.css')
+
+setup(
+    app,
+    loader=DictLoader({
+        "template_base": open('app/templates/base.html').read(),
+        "template_signin": open('app/templates/signin.html').read(),
+        "template_signup": open('app/templates/signup.html').read(),
+        "template_database": open('app/templates/database.html').read()
+    })
+)
+
+def signinValidate(form):
     password = form.get('password').encode('utf-8')
     passhash = sha256(password).hexdigest()
     account = sqlsup.selectWhere(
@@ -23,7 +37,7 @@ def checkLogin(form):
     )
     return bool(account)
 
-def checkSignup(form):
+def signupValidate(form):
     username_in_table = sqlsup.selectWhere(
         con, DbTable.ACCOUNTS, 
         username = form.get('username')
@@ -41,56 +55,60 @@ def userSignup(form):
         money = config.STARTING_MONEY
     )
 
-@app.route('/index', methods=['GET'])
-@app.route('/', methods=['GET', 'POST'])
-def index():
+@app.route("/base", methods=['GET'])
+@template("template_base")
+async def base(request):
     username = request.cookies.get('username')
-    return render_template('index.html', username = username)
+    return {"username" : username}
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
+@app.route("/signup", methods=['GET', 'POST'])
+async def signup(request):
     if request.method == 'POST':
-        if checkLogin(request.form):
-            resp = make_response(redirect('/index'))
-            resp.set_cookie('username', request.form.get('username'))
-            return resp
-        return render_template('login.html', errors = ['Incorrect username or password'])
-    elif request.method == 'GET':
-        if request.cookies.get('username'):
-            return redirect('/index')
-        return render_template('login.html')
-
-@app.route('/signup', methods=['GET', 'POST'])
-def signup():
-    if request.method == 'POST':
-        if checkSignup(request.form):
+        if signupValidate(request.form):
             userSignup(request.form)
-            resp = make_response(redirect('/index'))
-            resp.set_cookie('username', request.form.get('username'))
+            resp = response.redirect('/base')
+            resp.cookies['username'] = request.form.get('username')
             return resp
-        return render_template('signup.html', errors = ['Username taken'])
+        return render_template("template_signin", request, {})
     if request.method == 'GET':
         if request.cookies.get('username'):
-            return redirect('/index')
-        return render_template('signup.html')
+            return response.redirect('/base')
+        return render_template('template_signup', request, {})
+
+@app.route('/signin', methods=['GET', 'POST'])
+async def signin(request):
+    if request.method == 'POST':
+        if signinValidate(request.form):
+            resp = response.redirect('/index')
+            resp['username'] = request.form.get('username')
+            return resp
+        return render_template('template_signin', request, {})
+    elif request.method == 'GET':
+        if request.cookies.get('username'):
+            return response.redirect('/index')
+        return render_template('template_signin', request, {})
 
 @app.route('/signout', methods = ['GET'])
-def signout():
-    resp = make_response(redirect('/index'))
-    resp.delete_cookie('username')
+async def signout(request):
+    resp = response.redirect('/base')
+    del resp.cookies['username']
     return resp
 
 @app.route('/database', methods = ['GET', 'POST'])
-def database():
+async def database(request):
     if request.method == 'POST':
-        table = request.json.get('table')
-        columns = ['username', 'money', 'email', 'password_hash']
-        rows = sqlsup.selectColumns(con, table, columns)
-        return jsonify({'table' : rows, 'headers': columns})
+        table_str = request.json.get('table').upper()
+        table_enum = list(filter(
+            lambda en: en.name == table_str, DbTable
+        ))[0]
+        columns, rows = sqlsup.getTable(con, table_enum)
+        return response.json({'rows' : rows, 'columns': columns})
     elif request.method == 'GET':
         user = request.cookies.get('username')
-        return render_template('database.html', username=user)
+        return render_template('template_database', request, {})
 
+
+'''
 
 def sseFormat(data : dict):
     jsn = json.dumps(data)
@@ -106,22 +124,21 @@ def table():
 def message():
     user = request.cookies.get('username')
     message = request.json.get('message')
+    print(message)
     for user in users: recv[user] = message
     return jsonify({})
 
-@app.route('/stream', methods=['GET'])
+@app.route('/stream')
 def stream():
     user = request.cookies.get('username')
     users.add(user)
     def listenstream():
         while True:
             if recv.get(user):
-                message = recv[user]
+                message = 'neki'
                 recv[user] = None
                 yield sseFormat({'author': user, 'message': message})
-            break
+                time.sleep(0.5)
+                print('what')
     return Response(response=listenstream(), content_type='text/event-stream')
-
-@app.route("/streamTarget")
-def streamTarget():
-    return render_template('stream.html')
+'''

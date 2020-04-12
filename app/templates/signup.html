@@ -1,9 +1,9 @@
-{% extends "base.html" %}
+{% extends "template_base" %}
 
 {% block signupform %}
-  <div class='loginform-container'>
-    <span class='loginform-title'>Sign Up</span>
-    <form id='loginform' action='/signup' method='POST'>
+  <div class='form-container'>
+    <span class='form-title'>Sign Up</span>
+    <form id='signupform' action='/signup' method='POST'>
       <p>
         <label for='email'>&nbsp;&nbsp;&nbsp;Email: </label>
         <input required type = 'email' name = 'email' id = 'email' type = 'email' class = 'futuristic-input-text' />
