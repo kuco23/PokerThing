@@ -3,35 +3,31 @@
 {% block table %}
 
 <div id = 'table'>
-    <input type=text name='message' id='message' />
+    <input type=text name='message' id='message_in' />
     <button type=submit name='send' id='send'>Send</button>
-    <div id='message_board'>
+    <div id='message_out'>
     </div>
 </div>
 
 <script>
     'use strict'
-    let message_board = $("#message_board");
-    let source = new EventSource("/stream");
-    source.addEventListener("listen", function(e) {
-        let data = JSON.parse(e.data);
-        console.log(data);
-        message_board.append(
-            data.author + ": " + data.message + "<br />"
-        );
-    });
-    let message = $('#message');
-    $('#send').click(function() {
-        $.ajax('/message', {
-            type: 'POST',
-            contentType: 'application/json; charset=utf-8',
-            dataType: 'json',
-            data: JSON.stringify({message: message.val()}),
-            timeout: 500,
-            success: function (data, status, xhr) {console.log("Success");},
-            error: function (jqXhr, textStatus, errorMessage) {},
-        })
-    });
+    let message_in = $("#message_in");
+    let message_out = $("#message_out");
+    let message_send = $('#send');
+
+    let ws = new WebSocket("ws://" + window.location.host + "/feed");
+    ws.onopen = function() {console.log('Socket Opened');}
+    ws.onclose = function() {console.log('Socket Closed');}
+    ws.onmessage = function(rcv) {
+        console.log(rcv.data);
+        message_out.append(rcv.data + "<br />");
+    }
+    message_send.click(function() {
+        let data = message_in.val();
+        ws.send(data);
+        console.log('sending ' + data);
+    })
+
 </script>
 
 {% endblock %}

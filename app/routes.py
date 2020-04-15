@@ -2,13 +2,10 @@ import json, sqlite3, time
 from hashlib import sha256
 from jinja2 import DictLoader
 from sanic import response
+from sanic.websocket import ConnectionClosed
 from jinja2_sanic import template, render_template, setup
-from .lib import DbTable
-from app import app, con
-from app import config, sqlsup, DbTable
-
-users = set()
-recv = dict()
+from .lib import DbTable, sqlsup
+from app import app, con, config
 
 app.static('/css/main.css', 'app/static/css/main.css')
 app.static('/css/base.css', 'app/static/css/base.css')
@@ -16,6 +13,7 @@ app.static('/css/sections.css', 'app/static/css/sections.css')
 app.static('/css/forms.css', 'app/static/css/forms.css')
 app.static('/css/database.css', 'app/static/css/database.css')
 app.static('/css/tools.css', 'app/static/css/tools.css')
+app.static('/favicon.ico', 'app/static/favicon.ico')
 
 setup(
     app,
@@ -23,7 +21,8 @@ setup(
         "template_base": open('app/templates/base.html').read(),
         "template_signin": open('app/templates/signin.html').read(),
         "template_signup": open('app/templates/signup.html').read(),
-        "template_database": open('app/templates/database.html').read()
+        "template_database": open('app/templates/database.html').read(),
+        "template_table": open('app/templates/table.html').read()
     })
 )
 
@@ -79,13 +78,13 @@ async def signup(request):
 async def signin(request):
     if request.method == 'POST':
         if signinValidate(request.form):
-            resp = response.redirect('/index')
-            resp['username'] = request.form.get('username')
+            resp = response.redirect('/base')
+            resp.cookies['username'] = request.form.get('username')
             return resp
         return render_template('template_signin', request, {})
     elif request.method == 'GET':
         if request.cookies.get('username'):
-            return response.redirect('/index')
+            return response.redirect('/base')
         return render_template('template_signin', request, {})
 
 @app.route('/signout', methods = ['GET'])
@@ -105,40 +104,28 @@ async def database(request):
         return response.json({'rows' : rows, 'columns': columns})
     elif request.method == 'GET':
         user = request.cookies.get('username')
-        return render_template('template_database', request, {})
+        return render_template(
+            'template_database', request, {'username': user}
+        )
 
+context = {}
 
-'''
-
-def sseFormat(data : dict):
-    jsn = json.dumps(data)
-    return f'event: listen\ndata: {jsn}\n\n'
+@app.websocket('/feed')
+async def feed(request, ws):
+    user = request.cookies.get('username')
+    context[user] = ws
+    try:
+        while True:
+            message = await ws.recv()
+            for sock in context.values():
+                await sock.send(message)
+    except ConnectionClosed:
+        context.pop(user)
 
 @app.route('/table', methods = ['GET'])
-def table():
+async def table(request):
     user = request.cookies.get('username')
-    if user: return render_template('table.html', username=user)
-    else: return redirect('/index')
-
-@app.route('/message', methods=['POST'])
-def message():
-    user = request.cookies.get('username')
-    message = request.json.get('message')
-    print(message)
-    for user in users: recv[user] = message
-    return jsonify({})
-
-@app.route('/stream')
-def stream():
-    user = request.cookies.get('username')
-    users.add(user)
-    def listenstream():
-        while True:
-            if recv.get(user):
-                message = 'neki'
-                recv[user] = None
-                yield sseFormat({'author': user, 'message': message})
-                time.sleep(0.5)
-                print('what')
-    return Response(response=listenstream(), content_type='text/event-stream')
-'''
+    if user: return render_template(
+        'template_table', request, {'username': user}
+    )
+    else: return response.redirect('/base')

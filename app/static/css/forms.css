@@ -2,8 +2,7 @@ div.form-container {
   width: 50%;
   margin-top: 2rem;
   margin-bottom: 2rem;
-  padding-top: 2rem;
-  padding-bottom: 2rem;
+  padding: 2rem;
   color: orange;
   background-color: rgba(0,0,0,.55);
   border: 2px solid gold;
@@ -25,10 +24,10 @@ input.futuristic-input-text {
   background-color: rgba(0,0,0,.1);
   border: 2px solid rgba(256,256,256,.1);
   border-radius: 5px;
-  transition: border 0.8s;
 }
 input.futuristic-input-text:focus {
   border: 2px solid rgba(256,256,256,.4);
+  transition: border 0.8s;
 }
 input.futuristic-input-button {
   width: 25%;
@@ -37,15 +36,24 @@ input.futuristic-input-button {
   background-color: rgba(0,0,0,.1);
   border: 2px solid rgba(256,0,0,.4);
   border-radius: 5px;
-  transition: border 0.8s, color 0.8s;
 }
 input.futuristic-input-button:hover,
 input.futuristic-input-button:active {
   cursor: pointer;
   color: inherit;
   border: 2px solid orange;
+  transition: border 0.8s, color 0.8s;
 }
-input.futuristic-input-select {
-  border: 2px solid rgba(256,256,256,.4);
+
+select.futuristic-input-select {
+  padding: 0.2rem;
+  color: inherit;
+  font-family: inherit;
+  background-color: transparent;
+  border: 2px solid rgba(256,256,256,.1);
   border-radius: 5px;
+}
+select.futuristic-input-select:hover {
+  border: 2px solid rgba(256,256,256,.4);
+  transition: border 0.8s;
 }
