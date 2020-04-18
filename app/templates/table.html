@@ -2,9 +2,51 @@
 
 {% block table %}
 
-<div id = 'table'>
+<script>
+    var PlayerAction = {
+        FOLD: 0,
+        CHECK: 1,
+        CALL: 2,
+        RAISE: 3,
+        ALLIN: 4
+    };
+    var PrivateOutId = {
+        DEALTCARDS: -1
+    };
+    var PublicOutId = {
+        NEWROUND: 0,
+        ROUNDFINISHED: 1,
+        NEWTURN: 2,
+        SMALLBLIND: 3,
+        BIGBLIND: 4,
+        PLAYERFOLD: 5,
+        PLAYERCHECK: 6,
+        PLAYERCALL: 7,
+        PLAYERRAISE: 8,
+        PLAYERALLIN: 9,
+        PLAYERAMOUNTTOCALL: 10,
+        DECLAREPREMATUREWINNER: 11,
+        DECLAREFINISHEDWINNER: 12,
+        PUBLICCARDSHOW: 13
+    };
+</script>
+
+<div id='action_out'></div>
+<div id='action_in'>
+    <input type=submit name='check' id='check' value='CHECK' />
+    <input type=submit name='fold' id='fold' value='FOLD' />
+    <label for='amount'>AMOUNT</label>
+    <input type=range name='amount' id='amount' />
+    <input type=submit name='raise' id='raise' value='RAISE' />
+</div>
+
+<div id='table_cards'></div>
+<div id='user_cards'></div>
+<div id='state'></div>
+
+<div id='tchat'>
     <input type=text name='message' id='message_in' />
-    <button type=submit name='send' id='send'>Send</button>
+    <button name='send' id='send'>Send</button>
     <div id='message_out'>
     </div>
 </div>
@@ -14,13 +56,38 @@
     let message_in = $("#message_in");
     let message_out = $("#message_out");
     let message_send = $('#send');
+    let action_in = $('#action_in');
+    let action_out = $('#action_out');
+    let table_cards = $('#table_cards');
+    let user_cards = $('#user_cards');
+    let state = $('#state');
 
     let ws = new WebSocket("ws://" + window.location.host + "/feed");
-    ws.onopen = function() {console.log('Socket Opened');}
-    ws.onclose = function() {console.log('Socket Closed');}
+    ws.onopen = function() {
+        console.log('Socket Opened');
+    }
+    ws.onclose = function() {
+        console.log('Socket Closed');
+    }
     ws.onmessage = function(rcv) {
-        console.log(rcv.data);
-        message_out.append(rcv.data + "<br />");
+        let news = JSON.parse(rcv.data);
+
+        if (news.id == PublicOutId.DEALTCARDS) {
+            user_cards.text(news.data.cards);
+        } else if (news.id == PublicOutId.NEWROUND) {
+            state.text(news.data.button_id);
+            state.append(news.data.current_id);
+        } else if 
+
+        
+        /*
+        message_out.append(
+            "<div>" +
+                "<span>" + jsn.username + "</span>" +
+                "<span>" + jsn.message + "</span>" +
+            "</div>"
+        );
+        */
     }
     message_send.click(function() {
         let data = message_in.val();

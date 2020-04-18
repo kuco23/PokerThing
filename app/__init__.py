@@ -1,10 +1,11 @@
 import sqlite3
 from sanic import Sanic
 from . import config
-from .lib import *
+from .lib import SqLite, ServerGame, ServerTable
 
 app = Sanic(__name__)
-con = sqlite3.connect(config.DATABASE_PATH)
-for table in DbTable: sqlsup.createTable(con, table)
+dbase = SqLite(sqlite3.connect(config.DATABASE_PATH))
+game = ServerGame()
+game += ServerTable(0, [], 10, 20)
 
 from . import routes

@@ -15,3 +15,9 @@ h1 {
   font-size: 4rem;
   font-family: 'Montez', monospace;
 }
+
+.margin-top-5 {margin-top: 5px;}
+.margin-top-10 {margin-top: 10px;}
+.hidden {visibility: hidden;}
+a.lime_hover:hover {color: lime;}
+a.red_hover:hover {color: red;}

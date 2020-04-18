@@ -4,15 +4,18 @@ from jinja2 import DictLoader
 from sanic import response
 from sanic.websocket import ConnectionClosed
 from jinja2_sanic import template, render_template, setup
-from .lib import DbTable, sqlsup
-from app import app, con, config
+from .lib import DbTable, TableAction, ServerPlayer
+from app import app, dbase, game, config
+
+TABLE_ID = 0
+USER_ID = 0
+MONEY = 1000
 
 app.static('/css/main.css', 'app/static/css/main.css')
 app.static('/css/base.css', 'app/static/css/base.css')
-app.static('/css/sections.css', 'app/static/css/sections.css')
 app.static('/css/forms.css', 'app/static/css/forms.css')
 app.static('/css/database.css', 'app/static/css/database.css')
-app.static('/css/tools.css', 'app/static/css/tools.css')
+app.static('/css/pokertable.css', 'app/static/css/pokertable.css')
 app.static('/favicon.ico', 'app/static/favicon.ico')
 
 setup(
@@ -29,16 +32,16 @@ setup(
 def signinValidate(form):
     password = form.get('password').encode('utf-8')
     passhash = sha256(password).hexdigest()
-    account = sqlsup.selectWhere(
-        con, DbTable.ACCOUNTS, 
+    account = dbase.selectWhere(
+        DbTable.ACCOUNTS, 
         username = form.get('username'), 
         password_hash = passhash
     )
     return bool(account)
 
 def signupValidate(form):
-    username_in_table = sqlsup.selectWhere(
-        con, DbTable.ACCOUNTS, 
+    username_in_table = dbase.selectWhere(
+        DbTable.ACCOUNTS, 
         username = form.get('username')
     )
     return not username_in_table
@@ -46,8 +49,8 @@ def signupValidate(form):
 def userSignup(form):
     password = form.get('password').encode('utf-8')
     passhash = sha256(password).hexdigest()
-    sqlsup.insert(
-        con, DbTable.ACCOUNTS, 
+    dbase.insert(
+        DbTable.ACCOUNTS, 
         username = form.get('username'),
         password_hash = passhash,
         email = form.get('email'),
@@ -100,7 +103,7 @@ async def database(request):
         table_enum = list(filter(
             lambda en: en.name == table_str, DbTable
         ))[0]
-        columns, rows = sqlsup.getTable(con, table_enum)
+        columns, rows = base.getTable(table_enum)
         return response.json({'rows' : rows, 'columns': columns})
     elif request.method == 'GET':
         user = request.cookies.get('username')
@@ -108,19 +111,19 @@ async def database(request):
             'template_database', request, {'username': user}
         )
 
-context = {}
-
 @app.websocket('/feed')
 async def feed(request, ws):
-    user = request.cookies.get('username')
-    context[user] = ws
+    username = request.cookies.get('username')
+    player = ServerPlayer(TABLE_ID, USER_ID, username, MONEY, ws)
+    table = game[TABLE_ID]
+    table += player
     try:
         while True:
+            if not table.round and table:
+                data = table.takeAction(TableAction.STARTROUND)
             message = await ws.recv()
-            for sock in context.values():
-                await sock.send(message)
     except ConnectionClosed:
-        context.pop(user)
+        table -= player
 
 @app.route('/table', methods = ['GET'])
 async def table(request):

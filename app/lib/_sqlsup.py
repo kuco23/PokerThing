@@ -58,39 +58,42 @@ table_columns = dict(zip(DbTable, map(
     ]
 )))
 
-def createTable(connection, tbl, overwrite=False):
-    make_table = dbtables[tbl]
-    cursor = connection.cursor()
-    if overwrite:
-        cursor.execute("DROP TABLE IF EXISTS " + tbl.name)
-    cursor.execute(make_table)
-    connection.commit()
+class SqLite:
 
-def insert(connection, tbl, **pairs):
-    keys = ','.join(pairs.keys())
-    ques = ','.join(['?'] * len(pairs))
-    cursor = connection.cursor()
-    cursor.executemany(
-        f'INSERT INTO {tbl.name} ({keys}) VALUES ({ques})',
-        [tuple(pairs.values())]
-    )
-    connection.commit()
+    def __init__(self, con):
+        self.connection = con
+        self.cursor = con.cursor()
+        for table in DbTable: self.createTable(table)
 
-def selectWhere(connection, tbl, **pairs):
-    ntuple = table_columns[tbl]
-    condition = ' AND '.join(
-        f'{key}={repr(val)}' for key, val in pairs.items()
-    )
-    cursor = connection.cursor()
-    cursor.execute(f'SELECT * FROM {tbl.name} WHERE {condition}')
-    return [ntuple(*row) for row in cursor.fetchall()]
+    def createTable(self, tbl, overwrite=False):
+        make_table = dbtables[tbl]
+        if overwrite:
+            sql = "DROP TABLE IF EXISTS " + tbl.name
+            self.cursor.execute(sql)
+        self.cursor.execute(make_table)
+        self.connection.commit()
 
-def selectColumns(connection, tbl, cols):
-    cursor = connection.cursor()
-    cursor.execute(f'SElECT {",".join(cols)} FROM {tbl.name}')
-    return cursor.fetchall()
+    def insert(self, tbl, **pairs):
+        keys = ','.join(pairs.keys())
+        ques = ','.join(['?'] * len(pairs))
+        self.cursor.executemany(
+            f'INSERT INTO {tbl.name} ({keys}) VALUES ({ques})',
+            [tuple(pairs.values())]
+        )
+        self.connection.commit()
 
-def getTable(connection, tbl):
-    cursor = connection.cursor()
-    cursor.execute(f'SELECT * FROM {tbl.name}')
-    return table_columns[tbl]._fields, cursor.fetchall()
+    def selectWhere(self, tbl, **pairs):
+        ntuple = table_columns[tbl]
+        condition = ' AND '.join(
+            f'{key}={repr(val)}' for key, val in pairs.items()
+        )
+        self.cursor.execute(f'SELECT * FROM {tbl.name} WHERE {condition}')
+        return [ntuple(*row) for row in self.cursor.fetchall()]
+
+    def selectColumns(self, tbl, cols):
+        self.cursor.execute(f'SElECT {",".join(cols)} FROM {tbl.name}')
+        return self.cursor.fetchall()
+
+    def getTable(self, tbl):
+        self.cursor.execute(f'SELECT * FROM {tbl.name}')
+        return table_columns[tbl]._fields, self.cursor.fetchall()

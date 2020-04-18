@@ -1,0 +1,14 @@
+#tablechat {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    height: 25%;
+    background-color: rgba(60, 60, 60, .3);
+}
+#playerinfo {
+    position: fixed;
+    right: 0;
+    top: 0;
+    height: 75%;
+    background-color: black;
+}
