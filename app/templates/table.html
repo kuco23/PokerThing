@@ -3,31 +3,31 @@
 {% block table %}
 
 <script>
-    var PlayerAction = {
-        FOLD: 0,
-        CHECK: 1,
-        CALL: 2,
-        RAISE: 3,
-        ALLIN: 4
+    var ServerCode = {
+        MESSAGE: -6,
+        DEALTCARDS: 0,
+        NEWROUND: 1,
+        ROUNDFINISHED: 2,
+        NEWTURN: 3,
+        SMALLBLIND: 4,
+        BIGBLIND: 5,
+        PLAYERFOLD: 6,
+        PLAYERCHECK: 7,
+        PLAYERCALL: 8,
+        PLAYERRAISE: 9,
+        PLAYERALLIN: 10,
+        PLAYERAMOUNTTOCALL: 11,
+        DECLAREPREMATUREWINNER: 12,
+        DECLAREFINISHEDWINNER: 13,
+        PUBLICCARDSHOW: 14
     };
-    var PrivateOutId = {
-        DEALTCARDS: -1
-    };
-    var PublicOutId = {
-        NEWROUND: 0,
-        ROUNDFINISHED: 1,
-        NEWTURN: 2,
-        SMALLBLIND: 3,
-        BIGBLIND: 4,
-        PLAYERFOLD: 5,
-        PLAYERCHECK: 6,
-        PLAYERCALL: 7,
-        PLAYERRAISE: 8,
-        PLAYERALLIN: 9,
-        PLAYERAMOUNTTOCALL: 10,
-        DECLAREPREMATUREWINNER: 11,
-        DECLAREFINISHEDWINNER: 12,
-        PUBLICCARDSHOW: 13
+    var ClientCode = {
+        MESSAGE: 0,
+        FOLD: -5,
+        CHECK: -4,
+        CALL: -3,
+        RAISE: -2,
+        ALLIN: -1
     };
 </script>
 
@@ -70,29 +70,28 @@
         console.log('Socket Closed');
     }
     ws.onmessage = function(rcv) {
-        let news = JSON.parse(rcv.data);
-
-        if (news.id == PublicOutId.DEALTCARDS) {
-            user_cards.text(news.data.cards);
-        } else if (news.id == PublicOutId.NEWROUND) {
-            state.text(news.data.button_id);
-            state.append(news.data.current_id);
-        } else if 
-
-        
-        /*
-        message_out.append(
-            "<div>" +
-                "<span>" + jsn.username + "</span>" +
-                "<span>" + jsn.message + "</span>" +
-            "</div>"
-        );
-        */
+        let server_data = JSON.parse(rcv.data);
+        console.log(server_data);
+        if (server_data.id == ServerCode.DEALTCARDS) {
+            user_cards.text(server_data.data.cards);
+        } else if (server_data.id == ServerCode.NEWROUND) {
+            state.text(server_data.data.button_id);
+            state.append(server_data.data.current_id);
+        } else if (server_data.id == ServerCode.MESSAGE) {
+            console.log('inner' + server_data.message);
+            message_out.append(
+                "<div>" +
+                    "<span>" + server_data.username + "</span>" +
+                    "<span>" + server_data.message + "</span>" +
+                "</div>"
+            );
+        }
     }
     message_send.click(function() {
-        let data = message_in.val();
-        ws.send(data);
-        console.log('sending ' + data);
+        ws.send(JSON.stringify({
+            id: ClientCode.MESSAGE,
+            data: message_in.val()
+        }));
     })
 
 </script>

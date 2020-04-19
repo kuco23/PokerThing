@@ -4,7 +4,6 @@ class Player:
         self.table_id = table_id
         self.id = _id
         self.name = name
-             
         self.money = money
 
         self.cards = tuple()
@@ -14,7 +13,7 @@ class Player:
 
         self.stake = 0
         self.turn_stake = [0, 0, 0, 0]
-
+        
         self.played_turn = False
 
     @property
@@ -37,12 +36,13 @@ class Player:
         return self.hand == other.hand
 
     def resetState(self):
-        self.__init__(
-            self.table_id,
-            self.id,
-            self.name,
-            self.money
-        )
+        self.cards = tuple()
+        self.hand = None
+        self.is_folded = False
+        self.is_all_in = False
+        self.stake = 0
+        self.turn_stake = [0, 0, 0, 0]
+        self.played_turn = False
 
 
 class PlayerGroup(list):

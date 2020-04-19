@@ -1,29 +1,32 @@
 from collections import namedtuple, deque
 from json import dumps
-from .pokerlib.enums import *
-from .pokerlib import Game, Player, Round, Table
+from .pokerlib import Game, Player, Round, Table, PlayerGroup
+from ._enums import *
 
 class ServerPlayer(Player):
 
-    def __init__(self, *args, sock):
-        super(*args)
+    def __init__(self, table_id, _id, name, money, sock):
+        super().__init__(table_id, _id, name, money)
         self.sock = sock
 
-    def send(self, data):
+    async def send(self, data):
+        data['id'] = int(data['id'])
         jsned = dumps(data)
-        sock.send(jsned)
+        await self.sock.send(jsned)
+
+class ServerPlayerGroup(PlayerGroup):
+    pass
 
 class ServerRound(Round):
     __cards = [[j, i] for i in range(4) for j in range(13)]
-    pass
 
 class ServerTable(Table):
 
-    def sendToAll(self, data):
+    async def sendToAll(self, data):
         for player in self.players:
             player.send(data)
 
-    def sendOutQueue(self, public, private):
+    async def sendOutQueue(self, public, private):
         for out in public:
             for player in self.players:
                 player.send(out)
@@ -41,17 +44,17 @@ class ServerTable(Table):
             [dict(out._asdict()) for out in public_out_queue]
         )
     
-    def takeAction(self, action_id, **kwargs):
+    async def takeAction(self, action_id, **kwargs):
         if action_id == TableAction.STARTROUND:
             status = self.newRound(0)
             if status:
-                self.sendOutQueue(*self.emptyOutQueue())
+                await self.sendOutQueue(*self.emptyOutQueue())
                 if self.round: 
-                    self.sendToAll({
+                    await self.sendToAll({
                         'id': PublicOutId.NEWROUND, 
                         'data': {
-                            'button_id': self.round.button_id,
-                            'current_id': self.round.current_id
+                            'button_id': self.round.button,
+                            'current_id': self.round.current_index
                         }
                     })
                         

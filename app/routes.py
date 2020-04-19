@@ -4,8 +4,14 @@ from jinja2 import DictLoader
 from sanic import response
 from sanic.websocket import ConnectionClosed
 from jinja2_sanic import template, render_template, setup
-from .lib import DbTable, TableAction, ServerPlayer
+from .lib import (
+    DbTable, TableAction, ServerPlayer, 
+    ServerCode, ClientCode
+)
 from app import app, dbase, game, config
+
+import sys
+sys.stdout = open('log.txt', 'a')
 
 TABLE_ID = 0
 USER_ID = 0
@@ -113,17 +119,28 @@ async def database(request):
 
 @app.websocket('/feed')
 async def feed(request, ws):
+    global USER_ID
     username = request.cookies.get('username')
     player = ServerPlayer(TABLE_ID, USER_ID, username, MONEY, ws)
+    USER_ID += 1
     table = game[TABLE_ID]
-    table += player
+    table += [player]
     try:
         while True:
             if not table.round and table:
                 data = table.takeAction(TableAction.STARTROUND)
-            message = await ws.recv()
+            client_data = json.loads(await ws.recv())
+            action_id = client_data.get('id')
+            if action_id == ClientCode.MESSAGE:
+                for player in table:
+                    await player.send({
+                        'id': ServerCode.MESSAGE,
+                        'username': username,
+                        'message': client_data['data']
+                    })
+            
     except ConnectionClosed:
-        table -= player
+        table -= [player]
 
 @app.route('/table', methods = ['GET'])
 async def table(request):

@@ -3,7 +3,7 @@
 from . import enums
 from ._handparser import HandParser, HandParserGroup
 from ._player import Player, PlayerGroup
-from ._round import Round
+from ._round import AbstractRound, Round
 from ._table import Table
 from ._game import Game
 

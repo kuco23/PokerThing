@@ -2,6 +2,7 @@ from operator import add
 from math import inf
 from random import sample
 from collections import namedtuple, deque
+from abc import ABC
 
 from .enums import *
 from ._handparser import HandParser, HandParserGroup
@@ -33,10 +34,8 @@ from ._player import Player, PlayerGroup
 # Round attributes are passed only if Round
 # revalues them during its continuation.
 
-class Round:
+class AbstractRound(ABC):
     __deck = [[value, suit] for suit in Suit for value in Value]
-    PublicOut = namedtuple('PublicOut', ['id', 'data'])
-    PrivateOut = namedtuple('PrivateOut', ['id', 'user_id', 'data'])
 
     def __init__(self, _id, players, button, small_blind, big_blind):
         self.id = _id
@@ -51,9 +50,6 @@ class Round:
 
         self.table = list()
         self.turn = None
-
-        self.public_out_queue = deque([])
-        self.private_out_queue = deque([])
         
         self._deck = self._deckIterator()
         self._turn_generator = self._turnGenerator()
@@ -105,25 +101,6 @@ class Round:
         called = self.current_player.turn_stake[self.turn]
         return self.turn_stake - called
 
-    @property
-    def pots_balanced(self):
-        active_pots = [
-            player.turn_stake[self.turn]
-            for player in self.players
-            if player.is_active
-        ] or [inf]
-
-        all_in_max_pot = max([
-            player.turn_stake[self.turn]
-            for player in self.players
-            if player.is_all_in
-        ] or [0])
-
-        return (
-            len(set(active_pots)) == 1 and
-            active_pots[0] >= all_in_max_pot
-        )
-
     def _deckIterator(self):
         ncards = len(self.players) * 2 + 5
         return iter(sample(self.__deck, ncards))
@@ -151,6 +128,24 @@ class Round:
     def _shiftCurrentPlayer(self):
         i = self.current_index
         self.current_index = self.players.nextActiveIndex(i)
+    
+    def _pots_balanced(self):
+        active_pots = [
+            player.turn_stake[self.turn]
+            for player in self.players
+            if player.is_active
+        ] or [inf]
+
+        all_in_max_pot = max([
+            player.turn_stake[self.turn]
+            for player in self.players
+            if player.is_all_in
+        ] or [0])
+
+        return (
+            len(set(active_pots)) == 1 and
+            active_pots[0] >= all_in_max_pot
+        )
 
     def _addToPot(self, player, money):
         if 0 <= money < player.money:
@@ -264,24 +259,24 @@ class Round:
     def _processState(self):
         active = len(self.players.getActivePlayers())
         not_folded = len(self.players.getNotFoldedPlayers())
-        pots_balanced = self.pots_balanced
+        pots_balanced = self._pots_balanced()
 
         if not_folded == 0:
-            return self.close()
+            return self._close()
 
         elif not_folded == 1:
             self._dealPrematureWinnings()
-            return self.close()
+            return self._close()
 
         elif active <= 1 and pots_balanced:
             for _ in self._turn_generator: pass
             self._dealWinnings()
-            return self.close()
+            return self._close()
 
         elif self.players.allPlayedTurn() and pots_balanced:
             if self.turn == Turn.RIVER:
                 self._dealWinnings()
-                return self.close()
+                return self._close()
             else:
                 self.current_index = self.button
                 next(self._turn_generator)
@@ -331,15 +326,15 @@ class Round:
         self._addToPot(cp, cp.money)
 
     def _executeAction(self, action, raise_by):
-        if action == PlayerAction.FOLD:
+        if action == PlayerActionId.FOLD:
             self._fold()
-        elif action == PlayerAction.CHECK:
+        elif action == PlayerActionId.CHECK:
             self._check()
-        elif action == PlayerAction.CALL:
+        elif action == PlayerActionId.CALL:
             self._call()
-        elif action == PlayerAction.RAISE:
+        elif action == PlayerActionId.RAISE:
             self._raise(raise_by)
-        elif action == PlayerAction.ALLIN:
+        elif action == PlayerActionId.ALLIN:
             self._allin()
 
     def _processAction(self, action, raise_by=0):
@@ -347,38 +342,58 @@ class Round:
         self.current_player.played_turn = True
         self._processState()
 
-    def close(self):
+    def _respondToAction(self, action, raise_by=0):
+        player = self.current_player
+        to_call = self.turn_stake - player.turn_stake[self.turn]
+        if action == PlayerActionId.FOLD:
+            self._processAction(PlayerActionId.FOLD)
+        elif action == PlayerActionId.CHECK and to_call == 0:
+            self._processAction(PlayerActionId.CHECK)
+        elif action == PlayerActionId.CALL:
+            self._processAction(PlayerActionId.CALL)
+        elif action == PlayerActionId.RAISE:
+            if to_call < player.money:
+                self._processAction(PlayerActionId.RAISE, raise_by)
+        elif action == PlayerActionId.ALLIN:
+            self._processAction(PlayerActionId.ALLIN)
+
+    def _close(self):
         self.finished = True
         self.publicOut(PublicOutId.ROUNDFINISHED)
 
     def privateIn(self, action, raise_by=0):
         """Processes invalidated user input"""
-        # this is a standard action validation and can be overriden
-        player = self.current_player
-        to_call = self.turn_stake - player.turn_stake[self.turn]
-        
-        if action == PlayerAction.FOLD:
-            self._processAction(PlayerAction.FOLD)
-        elif action == PlayerAction.CHECK and to_call == 0:
-            self._processAction(PlayerAction.CHECK)
-        elif action == PlayerAction.CALL:
-            self._processAction(PlayerAction.CALL)
-        elif action == PlayerAction.RAISE:
-            if to_call < player.money:
-                self._processAction(PlayerAction.RAISE, raise_by)
-        elif action == PlayerAction.ALLIN:
-            self._processAction(PlayerAction.ALLIN)
+        ...
+
+    def privateOut(self, user_id, out_id, **kwargs):
+        """Override player out implementation"""
+        ...
+
+    def publicOut(self, out_id, **kwargs):
+        """Override game out implementation"""
+        ...
+
+class Round(AbstractRound):
+    PublicOut = namedtuple('PublicOut', ['id', 'data'])
+    PrivateOut = namedtuple('PrivateOut', ['id', 'user_id', 'data'])
+
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.public_out_queue = deque([])
+        self.private_out_queue = deque([])
+
+    def privateIn(self, action, raise_by=0):
+        """Processes invalidated user input"""
+        self._respondToAction(action, raise_by)
 
     def privateOut(self, user_id, out_id, **kwargs):
         """Player out implementation"""
         # A solution for interacting with outside ios
-        out = self.RoundOut(user_id, out_id, kwargs)
+        out = self.PrivateOut(user_id, out_id, kwargs)
         self.private_out_queue.append(out)
-        return
 
     def publicOut(self, out_id, **kwargs):
         """Game out implementation"""
         # A solution for interacting with outside ios
-        out = self.RoundOut(out_id, kwargs)
+        out = self.PublicOut(out_id, kwargs)
         self.public_out_queue.append(out)
-        return

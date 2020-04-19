@@ -21,7 +21,7 @@ class Suit(IntEnum):
     DIAMOND = 2
     HEART = 3
 
-class Hand:
+class Hand(IntEnum):
     HIGHCARD = 0
     ONEPAIR = 1
     TWOPAIR = 2
@@ -33,34 +33,37 @@ class Hand:
     STRAIGHTFLUSH = 8
     
 
-class Turn:
+class Turn(IntEnum):
     PREFLOP = 0
     FLOP = 1
     TURN = 2
     RIVER = 3
 
-class PlayerAction:
-    FOLD = 0
-    CHECK = 1
-    CALL = 2
-    RAISE = 3
-    ALLIN = 4
+class PlayerActionId(IntEnum):
+    FOLD = -5,
+    CHECK = -4,
+    CALL = -3,
+    RAISE = -2,
+    ALLIN = -1,
 
-class PrivateOutId:
-    DEALTCARDS = -1
+class PrivateOutId(IntEnum):
+    DEALTCARDS = 0,
 
-class PublicOutId:
-    NEWROUND = 0
-    ROUNDFINISHED = 1
-    NEWTURN = 2
-    SMALLBLIND = 3
-    BIGBLIND = 4
-    PLAYERFOLD = 5
-    PLAYERCHECK = 6
-    PLAYERCALL = 7
-    PLAYERRAISE = 8
-    PLAYERALLIN = 9
-    PLAYERAMOUNTTOCALL = 10
-    DECLAREPREMATUREWINNER = 11
-    DECLAREFINISHEDWINNER = 12
-    PUBLICCARDSHOW = 13
+class PublicOutId(IntEnum):
+    NEWROUND = 1,
+    ROUNDFINISHED = 2,
+    NEWTURN = 3,
+    SMALLBLIND = 4,
+    BIGBLIND = 5,
+    PLAYERFOLD = 6,
+    PLAYERCHECK = 7,
+    PLAYERCALL = 8,
+    PLAYERRAISE = 9,
+    PLAYERALLIN = 10,
+    PLAYERAMOUNTTOCALL = 11,
+    DECLAREPREMATUREWINNER = 12,
+    DECLAREFINISHEDWINNER = 13,
+    PUBLICCARDSHOW = 14
+
+class TableAction(IntEnum):
+    STARTROUND = 15
