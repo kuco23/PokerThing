@@ -26,15 +26,7 @@ class ServerTable(Table):
         for player in self.players:
             player.send(data)
 
-    async def sendOutQueue(self, public, private):
-        for out in public:
-            for player in self.players:
-                player.send(out)
-        for out in private:
-            player = self.players.getPlayerById(out.user_id)
-            if player: player.send(out)
-
-    def emptyOutQueue(self):
+    def _popRoundQueue(self):
         public_out_queue = self.round.public_out_queue.copy()
         public_out_queue.clear()
         private_out_queue = self.round.public_out_queue.copy()
@@ -44,19 +36,54 @@ class ServerTable(Table):
             [dict(out._asdict()) for out in public_out_queue]
         )
     
-    async def takeAction(self, action_id, **kwargs):
-        if action_id == TableAction.STARTROUND:
-            status = self.newRound(0)
-            if status:
-                await self.sendOutQueue(*self.emptyOutQueue())
-                if self.round: 
-                    await self.sendToAll({
-                        'id': PublicOutId.NEWROUND, 
-                        'data': {
-                            'button_id': self.round.button,
-                            'current_id': self.round.current_index
-                        }
-                    })
+    async def _addPlayer(self, table_id, _id, name, money, sock):
+        player = ServerPlayer(table_id, _id, name, money, sock)
+        self += [player]
+        player.send({
+            'id': ServerCode.INTRODUCEPLAYER,
+            'data': {
+                'player_id': player.id,
+                'player_name': name,
+                'player_money': money
+            }
+        })
+    
+    async def _startRound(self):
+        while self.newRound(0):
+            if self.round is not None:
+                private, public = self._popRoundQueue()
+                for out in private:
+                    self.execute(out['id'], out['user_id'], **out['data'])
+                for out in public: 
+                    self.execute(out['id'], None, **out['data'])
+    
+    async def _dealtCards(self, user_id, data):
+        player = self.players.getPlayerById(user_id)
+        if player: player.send(data)
+    
+    async def _newRound(self, user_id):
+        self.sendToAll({"id": ServerCode.NEWROUND})
+    
+    async def _smallBlind(self, user_id):
+        
+    
+    async def execute(self, action_id, user_id, **data):
+        if action_id == TableCode.NEWPLAYER:
+            self._addPlayer()
+            if not self.round and self: self._startRound()
+        elif action_id == TableCode.STARTROUND:
+            self._startRound()
+        elif action_id == ServerCode.DEALTCARDS:
+            self._dealtCards(user_id, data)
+        elif action_id == ServerCode.NEWROUND:
+            self._newRound()
+        elif action_id == ServerCode.SMALLBLIND:
+            self._smallBlind()
+        
+            
+        
+            
+        
                         
 
 class ServerGame(Game):

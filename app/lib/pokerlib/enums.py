@@ -1,4 +1,4 @@
-from enum import IntEnum
+from aenum import IntEnum
 
 class Value(IntEnum):
     TWO = 0
@@ -40,30 +40,34 @@ class Turn(IntEnum):
     RIVER = 3
 
 class PlayerActionId(IntEnum):
-    FOLD = -5,
-    CHECK = -4,
-    CALL = -3,
-    RAISE = -2,
-    ALLIN = -1,
+    FOLD = -5
+    CHECK = -4
+    CALL = -3
+    RAISE = -2
+    ALLIN = -1
 
+# codes sent from round to player
 class PrivateOutId(IntEnum):
-    DEALTCARDS = 0,
+    DEALTCARDS = 3
 
+# codes sent from round to players
 class PublicOutId(IntEnum):
-    NEWROUND = 1,
-    ROUNDFINISHED = 2,
-    NEWTURN = 3,
-    SMALLBLIND = 4,
-    BIGBLIND = 5,
-    PLAYERFOLD = 6,
-    PLAYERCHECK = 7,
-    PLAYERCALL = 8,
-    PLAYERRAISE = 9,
-    PLAYERALLIN = 10,
-    PLAYERAMOUNTTOCALL = 11,
-    DECLAREPREMATUREWINNER = 12,
-    DECLAREFINISHEDWINNER = 13,
-    PUBLICCARDSHOW = 14
+    NEWROUND = 1
+    NEWTURN = 2
+    SMALLBLIND = 4
+    BIGBLIND = 5
+    PLAYERCHECK = 6
+    PLAYERCALL = 7
+    PLAYERFOLD = 8
+    PLAYERRAISE = 9
+    PLAYERALLIN = 10
+    PLAYERAMOUNTTOCALL = 11
+    PUBLICCARDSHOW = 12
+    DECLAREPREMATUREWINNER = 13
+    DECLAREFINISHEDWINNER = 14
+    ROUNDFINISHED = 15
 
-class TableAction(IntEnum):
-    STARTROUND = 15
+# codes sent to the table
+class PublicInId(IntEnum):
+    NEWPLAYER = 100
+    STARTROUND = 101

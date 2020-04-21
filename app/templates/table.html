@@ -5,24 +5,25 @@
 <script>
     var ServerCode = {
         MESSAGE: -6,
-        DEALTCARDS: 0,
         NEWROUND: 1,
-        ROUNDFINISHED: 2,
-        NEWTURN: 3,
+        NEWTURN: 2,
+        DEALTCARDS: 3,
         SMALLBLIND: 4,
         BIGBLIND: 5,
-        PLAYERFOLD: 6,
-        PLAYERCHECK: 7,
-        PLAYERCALL: 8,
+        PLAYERCHECK: 6,
+        PLAYERCALL: 7,
+        PLAYERFOLD: 8,
         PLAYERRAISE: 9,
         PLAYERALLIN: 10,
         PLAYERAMOUNTTOCALL: 11,
-        DECLAREPREMATUREWINNER: 12,
-        DECLAREFINISHEDWINNER: 13,
-        PUBLICCARDSHOW: 14
+        PUBLICCARDSHOW: 12,
+        DECLAREPREMATUREWINNER: 13,
+        DECLAREFINISHEDWINNER: 14,
+        ROUNDFINISHED: 15,
+        INTRODUCEPLAYER: 16
     };
     var ClientCode = {
-        MESSAGE: 0,
+        MESSAGE: -6,
         FOLD: -5,
         CHECK: -4,
         CALL: -3,
@@ -41,7 +42,8 @@
 </div>
 
 <div id='table_cards'></div>
-<div id='user_cards'></div>
+<div id='player_cards'></div>
+<div id='player_list'></div>
 <div id='state'></div>
 
 <div id='tchat'>
@@ -53,30 +55,41 @@
 
 <script>
     'use strict'
-    let message_in = $("#message_in");
-    let message_out = $("#message_out");
-    let message_send = $('#send');
-    let action_in = $('#action_in');
-    let action_out = $('#action_out');
-    let table_cards = $('#table_cards');
-    let user_cards = $('#user_cards');
-    let state = $('#state');
+    const message_in = $("#message_in");
+    const message_out = $("#message_out");
+    const message_send = $('#send');
+    const action_in = $('#action_in');
+    const action_out = $('#action_out');
+    const table_cards = $('#table_cards');
+    const player_cards = $('#player_cards');
+    const player_list = $('#player_list');
+    const state = $('#state');
 
-    let ws = new WebSocket("ws://" + window.location.host + "/feed");
+    const ws = new WebSocket("ws://" + window.location.host + "/feed");
     ws.onopen = function() {
         console.log('Socket Opened');
-    }
+    };
     ws.onclose = function() {
         console.log('Socket Closed');
-    }
+    };
     ws.onmessage = function(rcv) {
         let server_data = JSON.parse(rcv.data);
-        console.log(server_data);
-        if (server_data.id == ServerCode.DEALTCARDS) {
-            user_cards.text(server_data.data.cards);
+        if (server_data.id == ServerCode.INTRODUCEPLAYER) {
+            let data = server_data.data;
+            $.cookie("player_id", data.player_id);
+            $.cookie('player_name', data.player_name);
+            $.cookie('player_money', data.player_money);
+            player_list.append(
+                '<div ' + 'id=' + data.player_id + '>' +
+                    '<span>' + data.player_name + '</span>' +
+                    '<span>' + data.player_money + '</span>' +
+                '</div>' 
+            );
+        } else if (server_data.id == ServerCode.DEALTCARDS) {
+            player_cards.text(server_data.data)
         } else if (server_data.id == ServerCode.NEWROUND) {
-            state.text(server_data.data.button_id);
-            state.append(server_data.data.current_id);
+            return;
+        } else if (server_data.id == ) 
         } else if (server_data.id == ServerCode.MESSAGE) {
             console.log('inner' + server_data.message);
             message_out.append(
@@ -86,13 +99,13 @@
                 "</div>"
             );
         }
-    }
+    };
     message_send.click(function() {
         ws.send(JSON.stringify({
             id: ClientCode.MESSAGE,
             data: message_in.val()
         }));
-    })
+    });
 
 </script>
 

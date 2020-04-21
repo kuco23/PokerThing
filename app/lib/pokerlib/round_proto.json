@@ -1,0 +1,20 @@
+{
+    "private_out": {
+        "DEALTCARDS": ["player_id", "cards"]
+    },
+    "public_out": {
+        "NEWROUND": [],
+        "NEWTURN": ["turn", "table"],
+        "SMALLBLIND": ["player_id", "turn_stake"],
+        "BIGBLIND": ["player_id", "turn_stake"],
+        "PLAYERAMAUNTTOCALL": ["player_id", "to_call"],
+        "PLAYERFOLD": ["player_id"],
+        "PLAYERCHECK": ["player_id"],
+        "PLAYERCALL": ["player_id", "called"],
+        "PLAYERRAISE": ["player_id", "raised_by"],
+        "PLAYERALLIN": ["player_id", "all_in_stake"],
+        "PUBLICCARDSHOW": ["player_id"],
+        "DECLAREFINISHEDWINNER": ["player_id", "money_won", "kickers"],
+        "DECLAREPREMATUREWINNER": ["player_id", "money_won"]
+    }
+}

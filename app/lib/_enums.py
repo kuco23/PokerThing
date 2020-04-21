@@ -1,33 +1,28 @@
-from enum import Enum, IntEnum
-from .pokerlib.enums import PublicOutId, TableAction
+from aenum import Enum, IntEnum, extend_enum
+from .pokerlib.enums import (
+    PublicOutId, PrivateOutId, PlayerActionId
+)
 
-class ServerCode:
-    MESSAGE = -6,
-    DEALTCARDS = 0,
-    NEWROUND = 1,
-    ROUNDFINISHED = 2,
-    NEWTURN = 3,
-    SMALLBLIND = 4,
-    BIGBLIND = 5,
-    PLAYERFOLD = 6,
-    PLAYERCHECK = 7,
-    PLAYERCALL = 8,
-    PLAYERRAISE = 9,
-    PLAYERALLIN = 10,
-    PLAYERAMOUNTTOCALL = 11,
-    DECLAREPREMATUREWINNER = 12,
-    DECLAREFINISHEDWINNER = 13,
-    PUBLICCARDSHOW = 14
-
-class ClientCode:
+class ServerCode(IntEnum):
     MESSAGE = -6
-    FOLD = -5,
-    CHECK = -4,
-    CALL = -3,
-    RAISE = -2,
-    ALLIN = -1,
+    INTRODUCEPLAYER = 16
 
-class DbTable(Enum):
+for e in PublicOutId:
+    extend_enum(ServerCode, e.name, e.value)
+for e in PrivateOutId:
+    extend_enum(ServerCode, e.name, e.value)
+
+class ClientCode(IntEnum):
+    MESSAGE = -6
+
+for e in PlayerActionId:
+    extend_enum(ClientCode, e.name, e.value)
+
+class TableCode(IntEnum):
+    NEWPLAYER = 100
+    STARTROUND = 101
+
+class DbTable:
     ACCOUNTS = 'accounts'
     POKERTABLES = 'pokertables'
     PLAYERS = 'players'

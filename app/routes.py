@@ -6,7 +6,7 @@ from sanic.websocket import ConnectionClosed
 from jinja2_sanic import template, render_template, setup
 from .lib import (
     DbTable, TableAction, ServerPlayer, 
-    ServerCode, ClientCode
+    ServerCode, ClientCode, TableCode
 )
 from app import app, dbase, game, config
 
@@ -14,7 +14,6 @@ import sys
 sys.stdout = open('log.txt', 'a')
 
 TABLE_ID = 0
-USER_ID = 0
 MONEY = 1000
 
 app.static('/css/main.css', 'app/static/css/main.css')
@@ -109,7 +108,7 @@ async def database(request):
         table_enum = list(filter(
             lambda en: en.name == table_str, DbTable
         ))[0]
-        columns, rows = base.getTable(table_enum)
+        columns, rows = dbase.getTable(table_enum)
         return response.json({'rows' : rows, 'columns': columns})
     elif request.method == 'GET':
         user = request.cookies.get('username')
@@ -119,28 +118,29 @@ async def database(request):
 
 @app.websocket('/feed')
 async def feed(request, ws):
-    global USER_ID
     username = request.cookies.get('username')
-    player = ServerPlayer(TABLE_ID, USER_ID, username, MONEY, ws)
-    USER_ID += 1
     table = game[TABLE_ID]
-    table += [player]
+    table.execute(TableCode.NEWPLAYER, 
+        table_id = table.id,
+        _id = username,
+        name = username,
+        money = MONEY,
+        sock = ws
+    )
     try:
         while True:
-            if not table.round and table:
-                data = table.takeAction(TableAction.STARTROUND)
             client_data = json.loads(await ws.recv())
-            action_id = client_data.get('id')
-            if action_id == ClientCode.MESSAGE:
-                for player in table:
-                    await player.send({
-                        'id': ServerCode.MESSAGE,
-                        'username': username,
-                        'message': client_data['data']
-                    })
+            client_code = client_data.get('id')
+            if client_code == ClientCode.MESSAGE:
+                table.sendToAll({
+                    'id': ServerCode.MESSAGE,
+                    'username': username,
+                    'message': client_data['data']
+                })
+
             
     except ConnectionClosed:
-        table -= [player]
+        pass
 
 @app.route('/table', methods = ['GET'])
 async def table(request):

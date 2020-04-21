@@ -388,12 +388,12 @@ class Round(AbstractRound):
 
     def privateOut(self, user_id, out_id, **kwargs):
         """Player out implementation"""
-        # A solution for interacting with outside ios
+        # A solution for interacting with an outside io
         out = self.PrivateOut(user_id, out_id, kwargs)
         self.private_out_queue.append(out)
 
     def publicOut(self, out_id, **kwargs):
         """Game out implementation"""
-        # A solution for interacting with outside ios
+        # A solution for interacting with an outside io
         out = self.PublicOut(out_id, kwargs)
         self.public_out_queue.append(out)
