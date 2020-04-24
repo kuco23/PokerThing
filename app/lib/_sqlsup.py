@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS {DbTable.PLAYERS.name} (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     account_id INTEGER,
     pokertable_id INTEGER,
+    money INTEGER,
     FOREIGN KEY (account_id) 
         REFERENCES {DbTable.ACCOUNTS.name}(id),
     FOREIGN KEY (pokertable_id) 
@@ -53,7 +54,8 @@ dbtables = dict(zip(
 table_columns = dict(zip(DbTable, map(
     namedtuple, [table.name for table in DbTable], [
         ['id', 'username', 'password_hash', 'email', 'money'],
-        ['id', 'blind'], ['id', 'account_id', 'pokertable_id'],
+        ['id', 'blind'], 
+        ['id', 'account_id', 'pokertable_id', 'money'],
         ['id', 'timestamp', 'turn_id', 'round_id', 'player_id']
     ]
 )))

@@ -15,6 +15,7 @@
         "PLAYERALLIN": ["player_id", "all_in_stake"],
         "PUBLICCARDSHOW": ["player_id"],
         "DECLAREFINISHEDWINNER": ["player_id", "money_won", "kickers"],
-        "DECLAREPREMATUREWINNER": ["player_id", "money_won"]
+        "DECLAREPREMATUREWINNER": ["player_id", "money_won"],
+        "ROUNDFINISHED": []
     }
 }

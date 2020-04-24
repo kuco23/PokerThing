@@ -5,7 +5,8 @@ from .pokerlib.enums import (
 
 class ServerCode(IntEnum):
     MESSAGE = -6
-    INTRODUCEPLAYER = 16
+    PLAYERJOINED = 16
+    STARTROUND = 17
 
 for e in PublicOutId:
     extend_enum(ServerCode, e.name, e.value)
@@ -15,14 +16,15 @@ for e in PrivateOutId:
 class ClientCode(IntEnum):
     MESSAGE = -6
 
-for e in PlayerActionId:
+for e in PlayerActionId: 
     extend_enum(ClientCode, e.name, e.value)
 
 class TableCode(IntEnum):
-    NEWPLAYER = 100
+    PLAYERJOINED = 100
     STARTROUND = 101
+    PLAYERLEFT = 102
 
-class DbTable:
+class DbTable(Enum):
     ACCOUNTS = 'accounts'
     POKERTABLES = 'pokertables'
     PLAYERS = 'players'

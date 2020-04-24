@@ -3,6 +3,7 @@ from random import sample, choice
 from hashlib import sha256
 import sqlite3
 
+'''
 random_hash = sha256(b'sdnajfn').hexdigest()
 random_string = lambda n: ''.join(sample(ascii_letters, n))
 
@@ -20,24 +21,9 @@ for i in range(n):
 
 tables = [[100] for _ in tables_ids]
 players = [[i, choice(tables_ids)] for i in range(n)]
+'''
 
 with sqlite3.connect('game.db') as con:
     cursor = con.cursor()
-    cursor.executemany(
-        """INSERT INTO accounts (username, password_hash, email, money)
-            VALUES (?,?,?,?)""",
-        fake_users
-    )
-    con.commit()
-    cursor.executemany(
-        """INSERT INTO pokertables (blind) VALUES (?)""",
-        tables
-    )
-    con.commit()
-    cursor.executemany(
-        """INSERT INTO players (account_id, pokertable_id)
-            VALUES (?, ?)
-        """,
-        players
-    )
-    con.commit()
+    cursor.execute('SELECT * FROM ACCOUNTS')
+    a = cursor.fetchall()

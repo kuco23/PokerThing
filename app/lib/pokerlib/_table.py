@@ -6,10 +6,11 @@ from ._round import Round
 class Table:
     Round = Round
 
-    def __init__(self, _id, players, small_blind, big_blind):
+    def __init__(self, _id, players, buyin, small_blind, big_blind):
         self.id = _id
         self.small_blind = small_blind
         self.big_blind = big_blind
+        self.buyin = buyin
         self.players = players
         self.button = 0
         self.round = None
@@ -30,12 +31,26 @@ class Table:
         return iter(self.all_players)
     
     def __iadd__(self, players):
-        self._clearPlayersFromSchedules(players)
-        self._addPlayersToAdditionSchedule(players)
-        if not self.round: self._updatePlayers()
+        self._addPlayers(players)
         return self
 
     def __isub__(self, players):
+        self._removePlayers(players)
+        return self
+                    
+    @property
+    def all_players(self):
+        return add(
+            self.players, 
+            list(self._player_addition_schedule.values())
+        )
+    
+    def _addPlayers(self, players):
+        self._clearPlayersFromSchedules(players)
+        self._addPlayersToAdditionSchedule(players)
+        if not self.round: self._updatePlayers()
+    
+    def _removePlayers(self, players):
         self._clearPlayersFromSchedules(players)
         self._addPlayersToRemovalSchedule(players)
         if not self.round: self._updatePlayers()
@@ -45,14 +60,6 @@ class Table:
                     self.round.privateIn(PlayerActionId.FOLD)
                 elif player.id in self.round:
                     player.is_folded = True
-        return self
-                    
-    @property
-    def all_players(self):
-        return add(
-            self.players, 
-            list(self._player_addition_schedule.values())
-        )
     
     def _addPlayersToAdditionSchedule(self, players):
         for player in players:

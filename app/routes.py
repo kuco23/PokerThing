@@ -5,10 +5,10 @@ from sanic import response
 from sanic.websocket import ConnectionClosed
 from jinja2_sanic import template, render_template, setup
 from .lib import (
-    DbTable, TableAction, ServerPlayer, 
+    DbTable, TableCode, ServerPlayer, 
     ServerCode, ClientCode, TableCode
 )
-from app import app, dbase, game, config
+from app import app, dbase, game, gamedb, config
 
 import sys
 sys.stdout = open('log.txt', 'a')
@@ -118,14 +118,11 @@ async def database(request):
 
 @app.websocket('/feed')
 async def feed(request, ws):
-    username = request.cookies.get('username')
     table = game[TABLE_ID]
-    table.execute(TableCode.NEWPLAYER, 
-        table_id = table.id,
-        _id = username,
-        name = username,
-        money = MONEY,
-        sock = ws
+    username = request.cookies.get('username')
+    table.execute(
+        TableCode.NEWPLAYER, 
+        name = username, sock = ws
     )
     try:
         while True:
@@ -134,11 +131,12 @@ async def feed(request, ws):
             if client_code == ClientCode.MESSAGE:
                 table.sendToAll({
                     'id': ServerCode.MESSAGE,
-                    'username': username,
-                    'message': client_data['data']
+                    'data': {
+                        'username': username,
+                        'message': client_data['data']
+                    }
                 })
 
-            
     except ConnectionClosed:
         pass
 

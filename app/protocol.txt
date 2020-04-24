@@ -1,0 +1,8 @@
+The communication is beeing done between the routing sistem, table and client.
+Communication ids are described as enums.
+The ServerCode enum holds the ids that are sent from server to client.
+The ClientCode enum holds the ids that are sent from client to server.
+The TableCode enum holds the ids that are sent from client, through routing system to the table. Every id that has to do with the game should end up processed in theh Table object (appropriate Table object)
+
+The round takes care of the low level stuff, like handling the action cycles, and saves the notifications inside its property namedtuples. This way noone outside round ever needs to check on what is happening inside the round, they can just read the notifications.
+The next layer is table, which handles player addition / extraction from round and keeps the rounds running. It also serves as an interface to round.
