@@ -1,6 +1,6 @@
 from aenum import Enum, IntEnum, extend_enum
 from .pokerlib.enums import (
-    PublicOutId, PrivateOutId, PlayerActionId
+    PublicOutId, PrivateOutId, PlayerActionId, Turn
 )
 
 class ServerCode(IntEnum):
@@ -28,4 +28,24 @@ class DbTable(Enum):
     ACCOUNTS = 'accounts'
     POKERTABLES = 'pokertables'
     PLAYERS = 'players'
-    ACTIONS = 'actions'
+    ROUNDS = 'rounds'
+    BOARDS = 'boards'
+    PLAYERCARDS = 'playercards'
+    PLAYERACTIONS = 'playeractions'
+
+class DbPlayerTurn(IntEnum):
+    pass
+
+for e in Turn: 
+    extend_enum(DbPlayerTurn, e.name, e.value)
+
+class DbPlayerAction(IntEnum):
+    SMALLBLIND = 0
+    BIGBLIND = 1
+    FOLD = 2
+    CHECK = 3
+    CALL = 4
+    RAISE = 5
+    ALLIN = 6
+    
+    

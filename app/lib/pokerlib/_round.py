@@ -31,8 +31,8 @@ from ._player import Player, PlayerGroup
 
 # kwargs arguments for publicOut and privateOut are
 # basic immutable round objects.
-# Round attributes are passed only if Round
-# revalues them during its continuation.
+# Round attributes can be saved by overriding 
+# publicOut and privateOut methods
 
 class AbstractRound(ABC):
     __deck = [[value, suit] for suit in Suit for value in Value]
@@ -255,7 +255,6 @@ class AbstractRound(ABC):
                         kickers = kickers
                     )
 
-
     def _processState(self):
         active = len(self.players.getActivePlayers())
         not_folded = len(self.players.getNotFoldedPlayers())
@@ -367,10 +366,12 @@ class AbstractRound(ABC):
 
     def privateOut(self, user_id, out_id, **kwargs):
         """Override player out implementation"""
+        # can be used to store additional round attributes
         ...
 
     def publicOut(self, out_id, **kwargs):
         """Override game out implementation"""
+        # can be used to store additional round attributes
         ...
 
 class Round(AbstractRound):
