@@ -1,5 +1,5 @@
 from operator import add
-from .enums import PlayerActionId
+from .enums import RoundPublicInId
 from ._player import Player, PlayerGroup
 from ._round import Round
 
@@ -57,7 +57,7 @@ class Table:
         else:
             for player in players:
                 if player.id == self.round.current_player.id:
-                    self.round.privateIn(PlayerActionId.FOLD)
+                    self.round.privateIn(RoundPublicInId.FOLD)
                 elif player.id in self.round:
                     player.is_folded = True
     

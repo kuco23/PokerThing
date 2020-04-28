@@ -39,7 +39,7 @@ class Turn(IntEnum):
     TURN = 2
     RIVER = 3
 
-class PlayerActionId(IntEnum):
+class RoundPublicInId(IntEnum):
     FOLD = -5
     CHECK = -4
     CALL = -3
@@ -47,11 +47,11 @@ class PlayerActionId(IntEnum):
     ALLIN = -1
 
 # codes sent from round to player
-class PrivateOutId(IntEnum):
+class RoundPrivateOutId(IntEnum):
     DEALTCARDS = 3
 
 # codes sent from round to players
-class PublicOutId(IntEnum):
+class RoundPublicOutId(IntEnum):
     NEWROUND = 1
     NEWTURN = 2
     SMALLBLIND = 4
@@ -66,8 +66,3 @@ class PublicOutId(IntEnum):
     DECLAREPREMATUREWINNER = 13
     DECLAREFINISHEDWINNER = 14
     ROUNDFINISHED = 15
-
-# codes sent to the table
-class PublicInId(IntEnum):
-    NEWPLAYER = 100
-    STARTROUND = 101

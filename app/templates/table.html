@@ -4,31 +4,17 @@
 
 <script>
     var ServerCode = {
-        MESSAGE: -6,
-        NEWROUND: 1,
-        NEWTURN: 2,
-        DEALTCARDS: 3,
-        SMALLBLIND: 4,
-        BIGBLIND: 5,
-        PLAYERCHECK: 6,
-        PLAYERCALL: 7,
-        PLAYERFOLD: 8,
-        PLAYERRAISE: 9,
-        PLAYERALLIN: 10,
-        PLAYERAMOUNTTOCALL: 11,
-        PUBLICCARDSHOW: 12,
-        DECLAREPREMATUREWINNER: 13,
-        DECLAREFINISHEDWINNER: 14,
-        ROUNDFINISHED: 15,
-        INTRODUCEPLAYER: 16
+        MESSAGE: -6, NEWROUND: 1, NEWTURN: 2,
+        DEALTCARDS: 3, SMALLBLIND: 4, BIGBLIND: 5,
+        PLAYERCHECK: 6, PLAYERCALL: 7, PLAYERFOLD: 8,
+        PLAYERRAISE: 9, PLAYERALLIN: 10,
+        PLAYERAMOUNTTOCALL: 11, PUBLICCARDSHOW: 12,
+        DECLAREPREMATUREWINNER: 13, DECLAREFINISHEDWINNER: 14,
+        ROUNDFINISHED: 15, INTRODUCEPLAYER: 16
     };
     var ClientCode = {
-        MESSAGE: -6,
-        FOLD: -5,
-        CHECK: -4,
-        CALL: -3,
-        RAISE: -2,
-        ALLIN: -1
+        MESSAGE: -6, FOLD: -5, CHECK: -4,
+        CALL: -3, RAISE: -2, ALLIN: -1
     };
 </script>
 
@@ -65,7 +51,9 @@
     const player_list = $('#player_list');
     const state = $('#state');
 
-    const ws = new WebSocket("ws://" + window.location.host + "/feed");
+    const ws = new WebSocket(
+        "ws://" + window.location.host + "/tablefeed"
+    );
     ws.onopen = function() {
         console.log('Socket Opened');
     };
@@ -74,29 +62,56 @@
     };
     ws.onmessage = function(rcv) {
         let server_data = JSON.parse(rcv.data);
-        if (server_data.id == ServerCode.INTRODUCEPLAYER) {
-            let data = server_data.data;
-            $.cookie("player_id", data.player_id);
-            $.cookie('player_name', data.player_name);
-            $.cookie('player_money', data.player_money);
-            player_list.append(
-                '<div ' + 'id=' + data.player_id + '>' +
-                    '<span>' + data.player_name + '</span>' +
-                    '<span>' + data.player_money + '</span>' +
-                '</div>' 
-            );
-        } else if (server_data.id == ServerCode.DEALTCARDS) {
-            player_cards.text(server_data.data)
-        } else if (server_data.id == ServerCode.NEWROUND) {
-            return;
-        } else if (server_data.id == ServerCode.MESSAGE) {
-            console.log('inner' + server_data.message);
-            message_out.append(
-                "<div>" +
-                    "<span>" + server_data.username + "</span>" +
-                    "<span>" + server_data.message + "</span>" +
-                "</div>"
-            );
+        switch (server_data.id) {
+            case ServerCode.INTRODUCEPLAYER:
+                let data = server_data.data;
+                $.cookie("player_id", data.player_id);
+                $.cookie('player_name', data.player_name);
+                $.cookie('player_money', data.player_money);
+                player_list.append(
+                    '<div ' + 'id=' + data.player_id + '>' +
+                        '<span>' + data.player_name + '</span>' +
+                        '<span>' + data.player_money + '</span>' +
+                    '</div>' 
+                );
+            case ServerCode.MESSAGE:
+                console.log('inner' + server_data.message);
+                message_out.append(
+                    "<div>" +
+                        "<span>" + server_data.username + "</span>" +
+                        "<span>" + server_data.message + "</span>" +
+                    "</div>"
+                );
+            case ServerCode.NEWROUND:
+                return;
+            case ServerCode.NEWTURN:
+                return;
+            case ServerCode.DEALTCARDS:
+                player_cards.text(server_data.data)
+            case ServerCode.SMALLBLIND:
+                return;
+            case ServerCode.BIGBLIND:
+                return;
+            case ServerCode.PLAYERCHECK:
+                return;
+            case ServerCode.PLAYERCALL:
+                return;
+            case ServerCode.PLAYERFOLD:
+                return;
+            case ServerCode.PLAYERRAISE:
+                return;
+            case ServerCode.PLAYERALLIN:
+                return;
+            case ServerCode.PLAYERAMOUNTTOCALL:
+                return;
+            case ServerCode.PUBLICCARDSHOW:
+                return;
+            case ServerCode.DECLAREPREMATUREWINNER:
+                return;
+            case ServerCode.DECLAREFINISHEDWINNER:
+                return;
+            case ServerCode.ROUNDFINISHED:
+                return;
         }
     };
     message_send.click(function() {

@@ -116,7 +116,7 @@ async def database(request):
             'template_database', request, {'username': user}
         )
 
-@app.websocket('/feed')
+@app.websocket('/tablefeed')
 async def feed(request, ws):
     table = game[TABLE_ID]
     username = request.cookies.get('username')
@@ -136,9 +136,13 @@ async def feed(request, ws):
                         'message': client_data['data']
                     }
                 })
-
+            else: table.executeRoundIn(
+                client_code, username
+            )
     except ConnectionClosed:
-        pass
+        table.executeTableIn(
+            TableCode.PLAYERLEFT, username
+        )
 
 @app.route('/table', methods = ['GET'])
 async def table(request):

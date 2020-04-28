@@ -14,8 +14,8 @@
         "PLAYERRAISE": ["player_id", "raised_by"],
         "PLAYERALLIN": ["player_id", "all_in_stake"],
         "PUBLICCARDSHOW": ["player_id"],
-        "DECLAREFINISHEDWINNER": ["player_id", "money_won", "kickers"],
         "DECLAREPREMATUREWINNER": ["player_id", "money_won"],
+        "DECLAREFINISHEDWINNER": ["player_id", "money_won", "kickers"],
         "ROUNDFINISHED": []
     }
 }

@@ -54,7 +54,7 @@ class AbstractRound(ABC):
         self._deck = self._deckIterator()
         self._turn_generator = self._turnGenerator()
 
-        self.publicOut(PublicOutId.NEWROUND)
+        self.publicOut(RoundPublicOutId.NEWROUND)
 
         for player in self.players:
             player.resetState()
@@ -62,7 +62,7 @@ class AbstractRound(ABC):
             player.hand = HandParser(list(player.cards))
 
             self.privateOut(
-                PrivateOutId.DEALTCARDS,
+                RoundPrivateOutId.DEALTCARDS,
                 player.id,
                 cards = list(player.cards)
             )
@@ -93,8 +93,7 @@ class AbstractRound(ABC):
         return list(map(lambda i: sum(map(
             lambda player: player.turn_stake[i],
             self.players
-            )), range(4)
-        ))
+        )), range(4)))
 
     @property
     def to_call(self):
@@ -118,7 +117,7 @@ class AbstractRound(ABC):
             self.table.extend(new_cards)
 
             self.publicOut(
-                PublicOutId.NEWTURN,
+                RoundPublicOutId.NEWTURN,
                 turn = turn,
                 table = self.table
             )
@@ -160,7 +159,7 @@ class AbstractRound(ABC):
             player.is_all_in = True
 
             self.publicOut(
-                PublicOutId.PLAYERALLIN,
+                RoundPublicOutId.PLAYERALLIN,
                 player_id = player.id,
                 all_in_stake = all_in_stake
             )
@@ -172,7 +171,7 @@ class AbstractRound(ABC):
         self._addToPot(previous_player, self.small_blind)
 
         self.publicOut(
-            PublicOutId.SMALLBLIND,
+            RoundPublicOutId.SMALLBLIND,
             player_id = previous_player.id,
             turn_stake = previous_player.turn_stake[0]
         )
@@ -180,7 +179,7 @@ class AbstractRound(ABC):
         self._addToPot(self.current_player, self.big_blind)
 
         self.publicOut(
-            PublicOutId.BIGBLIND,
+            RoundPublicOutId.BIGBLIND,
             player_id = self.current_player.id,
             turn_stake = self.current_player.turn_stake[0]
         )
@@ -191,7 +190,7 @@ class AbstractRound(ABC):
         winner.money += won
 
         self.publicOut(
-            PublicOutId.DECLAREPREMATUREWINNER,
+            RoundPublicOutId.DECLAREPREMATUREWINNER,
             player_id = winner.id,
             money_won = won,
         )
@@ -210,7 +209,7 @@ class AbstractRound(ABC):
 
         for competitor in stake_sorted:
             self.publicOut(
-                PublicOutId.PUBLICCARDSHOW,
+                RoundPublicOutId.PUBLICCARDSHOW,
                 player_id = competitor.id
             )
 
@@ -249,7 +248,7 @@ class AbstractRound(ABC):
                     win_split.money += round(win_took)
 
                     self.publicOut(
-                        PublicOutId.DECLAREFINISHEDWINNER,
+                        RoundPublicOutId.DECLAREFINISHEDWINNER,
                         player_id = win_split.id,
                         money_won = round(win_took),
                         kickers = kickers
@@ -284,7 +283,7 @@ class AbstractRound(ABC):
         called = self.current_player.turn_stake[self.turn]
 
         self.publicOut(
-            PublicOutId.PLAYERAMOUNTTOCALL,
+            RoundPublicOutId.PLAYERAMOUNTTOCALL,
             player_id = self.current_player.id,
             to_call = self.turn_stake - called
         )
@@ -292,13 +291,13 @@ class AbstractRound(ABC):
     def _fold(self):
         self.current_player.is_folded = True
         self.publicOut(
-            PublicOutId.PLAYERFOLD,
+            RoundPublicOutId.PLAYERFOLD,
             player_id = self.current_player.id
         )
 
     def _check(self):
         self.publicOut(
-            PublicOutId.PLAYERCHECK,
+            RoundPublicOutId.PLAYERCHECK,
             player_id = self.current_player.id
         )
 
@@ -306,7 +305,7 @@ class AbstractRound(ABC):
         to_call = self.to_call
         self._addToPot(self.current_player, to_call)
         self.publicOut(
-            PublicOutId.PLAYERCALL,
+            RoundPublicOutId.PLAYERCALL,
             player_id = self.current_player.id,
             called = to_call
         )
@@ -315,7 +314,7 @@ class AbstractRound(ABC):
         to_call= self.to_call
         self._addToPot(self.current_player, to_call + raise_by)
         self.publicOut(
-            PublicOutId.PLAYERRAISE,
+            RoundPublicOutId.PLAYERRAISE,
             player_id = self.current_player.id,
             raised_by = raise_by
         )
@@ -325,15 +324,15 @@ class AbstractRound(ABC):
         self._addToPot(cp, cp.money)
 
     def _executeAction(self, action, raise_by):
-        if action == PlayerActionId.FOLD:
+        if action == RoundPublicInId.FOLD:
             self._fold()
-        elif action == PlayerActionId.CHECK:
+        elif action == RoundPublicInId.CHECK:
             self._check()
-        elif action == PlayerActionId.CALL:
+        elif action == RoundPublicInId.CALL:
             self._call()
-        elif action == PlayerActionId.RAISE:
+        elif action == RoundPublicInId.RAISE:
             self._raise(raise_by)
-        elif action == PlayerActionId.ALLIN:
+        elif action == RoundPublicInId.ALLIN:
             self._allin()
 
     def _processAction(self, action, raise_by=0):
@@ -341,26 +340,27 @@ class AbstractRound(ABC):
         self.current_player.played_turn = True
         self._processState()
 
-    def _respondToAction(self, action, raise_by=0):
+    def _respondToAction(self, player_id, action, raise_by=0):
         player = self.current_player
+        if player_id != player.id: return
         to_call = self.turn_stake - player.turn_stake[self.turn]
-        if action == PlayerActionId.FOLD:
-            self._processAction(PlayerActionId.FOLD)
-        elif action == PlayerActionId.CHECK and to_call == 0:
-            self._processAction(PlayerActionId.CHECK)
-        elif action == PlayerActionId.CALL:
-            self._processAction(PlayerActionId.CALL)
-        elif action == PlayerActionId.RAISE:
+        if action == RoundPublicInId.FOLD:
+            self._processAction(RoundPublicInId.FOLD)
+        elif action == RoundPublicInId.CHECK and to_call == 0:
+            self._processAction(RoundPublicInId.CHECK)
+        elif action == RoundPublicInId.CALL:
+            self._processAction(RoundPublicInId.CALL)
+        elif action == RoundPublicInId.RAISE:
             if to_call < player.money:
-                self._processAction(PlayerActionId.RAISE, raise_by)
-        elif action == PlayerActionId.ALLIN:
-            self._processAction(PlayerActionId.ALLIN)
+                self._processAction(RoundPublicInId.RAISE, raise_by)
+        elif action == RoundPublicInId.ALLIN:
+            self._processAction(RoundPublicInId.ALLIN)
 
     def _close(self):
         self.finished = True
-        self.publicOut(PublicOutId.ROUNDFINISHED)
+        self.publicOut(RoundPublicOutId.ROUNDFINISHED)
 
-    def privateIn(self, action, raise_by=0):
+    def publicIn(self, action, raise_by=0):
         """Processes invalidated user input"""
         ...
 
@@ -383,7 +383,7 @@ class Round(AbstractRound):
         self.public_out_queue = deque([])
         self.private_out_queue = deque([])
 
-    def privateIn(self, action, raise_by=0):
+    def publicIn(self, player_id, action, raise_by=0):
         """Processes invalidated user input"""
         self._respondToAction(action, raise_by)
 

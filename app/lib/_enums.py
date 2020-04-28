@@ -1,6 +1,7 @@
 from aenum import Enum, IntEnum, extend_enum
 from .pokerlib.enums import (
-    PublicOutId, PrivateOutId, PlayerActionId, Turn
+    RoundPublicOutId, RoundPrivateOutId, 
+    RoundPublicInId, Turn
 )
 
 class ServerCode(IntEnum):
@@ -8,15 +9,15 @@ class ServerCode(IntEnum):
     PLAYERJOINED = 16
     STARTROUND = 17
 
-for e in PublicOutId:
+for e in RoundPublicOutId:
     extend_enum(ServerCode, e.name, e.value)
-for e in PrivateOutId:
+for e in RoundPrivateOutId:
     extend_enum(ServerCode, e.name, e.value)
 
 class ClientCode(IntEnum):
     MESSAGE = -6
 
-for e in PlayerActionId: 
+for e in RoundPublicInId: 
     extend_enum(ClientCode, e.name, e.value)
 
 class TableCode(IntEnum):
