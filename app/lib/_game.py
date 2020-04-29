@@ -31,7 +31,7 @@ class ServerRound(Round):
     def privateOut(self, user_id, out_id, **kwargs):
         if out_id == RoundPrivateOutId.DEALTCARDS:
             player = self.players.getPlayerById(user_id)
-            kwargs.update({'cards': player.cards})
+            kwargs.update({'player_cards': player.cards})
         super().privateOut(self, user_id, out_id, kwargs)
 
     def publicOut(self, out_id, **kwargs):
@@ -39,16 +39,17 @@ class ServerRound(Round):
             'turn_id': self.turn, 
             'round_id': self.round,
         })
+        player_id = kwargs.get('player_id')
+        if player_id is not None: 
+            player = self.players.getPlayerById(player_id)
+            kwargs['player_money'] = player.money
         if out_id == RoundPublicOutId.DECLAREFINISHEDWINNER:
-            player = self.players.getPlayerById(
-                kwargs['player_id'] # format hand description!
-            )
-            kwargs.update({'hand': player.hand.handenum})
+            # format hand description
+            kwargs['hand'] = player.hand.handenum
         elif out_id == RoundPublicOutId.PUBLICCARDSHOW:
-            player = self.players.getPlayerById(
-                kwargs['player_id']
-            )
-            kwargs.update({'cards': player.cards})
+            kwargs['player_cards'] = player.cards
+        elif out_id == RoundPublicOutId.NEWTURN:
+            kwargs['board_cards'] = self.board
         super().publicOut(self, out_id, **kwargs)
 
 # serves the table, by translating the Client and Server
@@ -138,15 +139,15 @@ class ServerTable(Table):
     async def _onNewRound(self):
         self.notifyAll({"id": ServerCode.NEWROUND})
     
-    async def _onNewTurn(self, turn, table, round_id):
+    async def _onNewTurn(self, turn, board, round_id):
         self.gamebase.insertBoard(
-            round_id, turn.value, table
+            round_id, turn.value, board
         )
         self.notifyAll({
             "id": ServerCode.NEWTURN,
             "data": {
                 "turn": turn.value,
-                "table": table
+                "board_cards": board
             }
         })
     
@@ -165,7 +166,7 @@ class ServerTable(Table):
         })
     
     async def _onSmallBlind(
-        self, player_id, stake, round_id
+        self, player_id, player_money, stake, round_id
     ):
         self.gamebase.insertPlayerAction(
             round_id, player_id, 
@@ -177,13 +178,14 @@ class ServerTable(Table):
             "id": ServerCode.SMALLBLIND,
             "data": {
                 "player_id": player_id,
+                "player_money": player_money,
                 "small_blind": self.small_blind,
                 "stake": stake
             }
         }) 
 
     async def _onBigBlind(
-        self, player_id, stake, round_id
+        self, player_id, player_money, stake, round_id
     ):
         self.gamebase.insertPlayerAction(
             round_id, player_id, 
@@ -195,6 +197,7 @@ class ServerTable(Table):
             "id": ServerCode.BIGBLIND,
             "data": {
                 "player_id": player_id,
+                "player_money": player_money,
                 "big_blind": self.big_blind,
                 "stake": stake
             }
@@ -241,7 +244,8 @@ class ServerTable(Table):
         })
     
     async def _onPlayerCall(
-        self, player_id, called, round_id, turn_id
+        self, player_id, player_money, called, 
+        round_id, turn_id
     ):
         self.insertPlayerAction(
             round_id, player_id, turn_id,
@@ -251,12 +255,14 @@ class ServerTable(Table):
             "id": ServerCode.PLAYERCALL,
             "data": {
                 "player_id": player_id,
+                "player_money": player_money,
                 "called": called
             }
         })
     
     async def _onPlayerRaise(
-        self, player_id, raised_by, round_id, turn_id
+        self, player_id, player_money, raised_by, 
+        round_id, turn_id
     ):
         self.insertPlayerAction(
             round_id, player_id, turn_id,
@@ -266,12 +272,14 @@ class ServerTable(Table):
             "id": ServerCode.PLAYERRAISE,
             "data": {
                 "player_id": player_id,
+                "player_money": player_money,
                 "raised_by": raised_by
             }
         })
     
     async def _onPlayerAllin(
-        self, player_id, allin_stake, round_id, turn_id
+        self, player_id, player_money, allin_stake, 
+        round_id, turn_id
     ):
         self.insertPlayerAction(
             round_id, player_id, turn_id,
@@ -281,6 +289,7 @@ class ServerTable(Table):
             "id": ServerCode.PLAYERALLIN,
             "data": {
                 "player_id": player_id,
+                "player_money": player_money,
                 "allin_stake": allin_stake
             }
         })
@@ -291,30 +300,34 @@ class ServerTable(Table):
             "id": ServerCode.PUBLICCARDSHOW,
             "data": {
                 "player_id": player_id,
-                "cards": player.cards
+                "player_cards": player.cards
             }
         })
     
     async def _onDeclarePrematureWinner(
-        self, player_id, won
+        self, player_id, player_money, won
     ):
         self.notifyAll({
             "id": ServerCode.DECLAREPREMATUREWINNER,
             "data": {
                 "player_id": player_id,
+                "player_money": player_money,
                 "won": won
             }
         })
     
     # log winners + winnings into database
     async def _onDeclareFinishedWinner(
-        self, player_id, won, hand, kickers, turn_id
+        self, player_id, player_money, won, hand, 
+        kickers, turn_id, round_id
     ):
         self.notifyAll({
             "id": ServerCode.DECLAREFINISHEDWINNER,
             "data": {
                 "player_id": player_id,
+                "player_money": player_money,
                 "won": won,
+                "hand": hand,
                 "kickers": kickers
             }
         })
@@ -327,8 +340,7 @@ class ServerTable(Table):
     async def executeTableIn(self, code_id, player_id, **data):
         if code_id == TableCode.PLAYERJOINED:
             self._onPlayerAdd(
-                player_id, 
-                data['name'], data['sock']
+                player_id, data['name'], data['sock']
             )
         elif code_id == TableCode.PLAYERLEFT:
             self._onPlayerLeft(player_id)
@@ -370,17 +382,18 @@ class ServerTable(Table):
             )
         elif code_id == RoundPublicOutId.NEWTURN:
             self._onNewTurn(
-                data['turn'], data['table'], 
+                data['turn'], data['board_cards'], 
                 data['round_id']
             )
         elif code_id == RoundPublicOutId.SMALLBLIND:
             self._onSmallBlind(
-                data['player_id'], data['turn_stake']
+                data['player_id'], data['player_money'],
+                data['turn_stake'], data['round_id']
             )
         elif code_id == RoundPublicOutId.BIGBLIND:
             self._onBigBlind(
-                data['player_id'], data['turn_stake'],
-                data['round_id']
+                data['player_id'], data['player_money'],
+                data['turn_stake'], data['round_id']
             )
         elif code_id == RoundPublicOutId.PLAYERAMOUNTTOCALL:
             self._onPlayerAmountToCall(
@@ -398,32 +411,37 @@ class ServerTable(Table):
             )
         elif code_id == RoundPublicOutId.PLAYERCALL:
             self._onPlayerCall(
-                data['player_id'], data['called'], 
-                data['round_id'], data['turn_id']
+                data['player_id'], data['player_money'],
+                data['called'], data['round_id'], 
+                data['turn_id']
             )
         elif code_id == RoundPublicOutId.PLAYERRAISE:
             self._onPlayerRaise(
-                data['player_id'], data['raised_by'],
-                data['round_id'], data['turn_id']
+                data['player_id'], data['player_money'],
+                data['raised_by'], data['round_id'], 
+                data['turn_id']
             )
         elif code_id == RoundPublicOutId.PLAYERALLIN:
             self._onPlayerAllin(
-                data['player_id'], data['all_in_stake'],
-                data['round_id'], data['turn_id']
+                data['player_id'], data['player_money'],
+                data['all_in_stake'], data['round_id'], 
+                data['turn_id']
             )
         elif code_id == RoundPublicOutId.PUBLICCARDSHOW:
             self._onPublicCardShow(
-                data['player_id'], data['cards']
+                data['player_id'], data['player_cards']
             )
         elif code_id == RoundPublicOutId.DECLAREPREMATUREWINNER:
             self._onDeclarePrematureWinner(
-                data['player_id'], data['money_won']
+                data['player_id'], data['player_money'],
+                data['money_won']
             )
         elif code_id == RoundPublicOutId.DECLAREFINISHEDWINNER:
             self._onDeclareFinishedWinner(
-                data['player_id'], data['money_won'],
-                data['hand'], data['kickers'], 
-                data['turn_id']
+                data['player_id'], data['player_money'],
+                data['money_won'], data['hand'], 
+                data['kickers'], data['turn_id'],
+                data['round_id']
             )
         elif code_id == RoundPublicOutId.ROUNDFINISHED:
             self._onRoundFinished()               

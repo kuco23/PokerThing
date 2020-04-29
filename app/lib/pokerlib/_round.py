@@ -31,8 +31,8 @@ from ._player import Player, PlayerGroup
 
 # kwargs arguments for publicOut and privateOut are
 # basic immutable round objects.
-# Round attributes can be saved by overriding 
-# publicOut and privateOut methods
+# additional Round attributes can be cached by overriding 
+# publicOut and privateOut methods, when needed for io purposes
 
 class AbstractRound(ABC):
     __deck = [[value, suit] for suit in Suit for value in Value]
@@ -48,7 +48,7 @@ class AbstractRound(ABC):
         self.button = button
         self.current_index = button
 
-        self.table = list()
+        self.board = list()
         self.turn = None
         
         self._deck = self._deckIterator()
@@ -113,12 +113,11 @@ class AbstractRound(ABC):
                 player.hand += new_cards
                 player.hand.parse()
 
-            self.table.extend(new_cards)
+            self.board.extend(new_cards)
 
             self.publicOut(
                 RoundPublicOutId.NEWTURN,
-                turn = turn,
-                table = self.table
+                turn = turn
             )
 
             yield

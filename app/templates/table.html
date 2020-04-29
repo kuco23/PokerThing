@@ -2,30 +2,6 @@
 
 {% block table %}
 
-<script>
-    var ServerCode = {
-        MESSAGE: -6, NEWROUND: 1, NEWTURN: 2,
-        DEALTCARDS: 3, SMALLBLIND: 4, BIGBLIND: 5,
-        PLAYERCHECK: 6, PLAYERCALL: 7, PLAYERFOLD: 8,
-        PLAYERRAISE: 9, PLAYERALLIN: 10,
-        PLAYERAMOUNTTOCALL: 11, PUBLICCARDSHOW: 12,
-        DECLAREPREMATUREWINNER: 13, DECLAREFINISHEDWINNER: 14,
-        ROUNDFINISHED: 15, PLAYERJOINED: 16, PLAYERSETUP: 17
-    };
-    var ClientCode = {
-        MESSAGE: -6, FOLD: -5, CHECK: -4, CALL: -3, 
-        RAISE: -2, ALLIN: -1
-    };
-
-    function divOfSpam(array, id) {
-        let html = "<div id='" + id + "'>";
-        array.forEach(function(s) {
-            html.append("<spam>" + s + "</spam>");
-        });
-        return html + "</div>";
-    }
-</script>
-
 <div id='action_feed'></div>
 <div id='action_in'>
     <input type=submit name='check' id='check' value='CHECK' />
@@ -51,6 +27,37 @@
 
 <script>
     'use strict'
+
+    function makeDiv(text) {
+        return "<div>" + text + "</div>";
+    }
+    function divOfSpam(text_array, id) {
+        let html = "<div id='" + id + "'>";
+        text_array.forEach(function(s) {
+            html.append("<spam>" + s + "</spam>");
+        });
+        return html + "</div>";
+    }
+    function updateMoney(player_id, money) {
+        $('#' + player_id + ' > spam:nth-child(3)').text(
+            money
+        );
+    }
+
+    const ServerCode = {
+        MESSAGE: -6, NEWROUND: 1, NEWTURN: 2, 
+        DEALTCARDS: 3, SMALLBLIND: 4, BIGBLIND: 5, 
+        PLAYERCHECK: 6, PLAYERCALL: 7, PLAYERFOLD: 8, 
+        PLAYERRAISE: 9, PLAYERALLIN: 10,
+        PLAYERAMOUNTTOCALL: 11, PUBLICCARDSHOW: 12,
+        DECLAREPREMATUREWINNER: 13, DECLAREFINISHEDWINNER: 14,
+        ROUNDFINISHED: 15, PLAYERJOINED: 16, PLAYERSETUP: 17
+    };
+    const ClientCode = {
+        MESSAGE: -6, FOLD: -5, CHECK: -4, 
+        CALL: -3, RAISE: -2, ALLIN: -1
+    };
+
     const message_in = $("#message_in");
     const message_out = $("#message_out");
     const message_send = $('#send');
@@ -73,54 +80,114 @@
     ws.onmessage = function(rcv) {
         let server_sent = JSON.parse(rcv.data);
         let body = server_sent.data;
+        let user = $.cookie("player_name");
         switch (server_sent.id) {
             case ServerCode.PLAYERJOINED:
                 $.cookie("player_id", body.player_id);
                 $.cookie('player_name', body.player_name);
                 $.cookie('player_money', body.player_money);
                 player_list.append(divOfSpam([
-                    body.player_id, 
-                    body.player_name, 
-                    body.player_money
-                ]));
+                    body.player_id, body.player_name, 
+                ]), toString(data['player_id']));
             case ServerCode.MESSAGE:
-                console.log('inner' + server_sent.message);
                 message_out.append(divOfSpam([
-                    body.username, body.message
+                    body['username'], body['message']
                 ]));
             case ServerCode.NEWROUND:
-                action_feed.append(divOfSpam([
-                    "new round"
-                ]));
+                action_feed.append(makeDiv("new round"));
             case ServerCode.NEWTURN:
-                action_feed.append(divOfSpam([body.turn]));
-                board_cards.append(body.cards);
+                action_feed.append(makeDiv(body.turn));
+                board_cards.append(body['board_cards']);
             case ServerCode.DEALTCARDS:
-                player_cards.text(body.cards)
+                player_cards.text(body['player_cards']);
             case ServerCode.SMALLBLIND:
-                
+                updateMoney(
+                    body['player_id'], 
+                    body['player_money']
+                );
+                action_feed.append(makeDiv(
+                    "player gave small blind of " + 
+                    body['stake']
+                ));
             case ServerCode.BIGBLIND:
-                return;
+                updateMoney(
+                    body['player_id'],
+                    body['player_money']
+                );
+                action_feed.append(makeDiv(
+                    body['player_id'] + 
+                    ' gave big blind of ' + 
+                    body['stake']
+                ));
             case ServerCode.PLAYERCHECK:
-                return;
+                action_feed.append(makeDiv(
+                    body['player_id'] + ' checks'
+                ));
             case ServerCode.PLAYERCALL:
-                return;
+                updateMoney(
+                    body['player_id'], 
+                    body['player_money']
+                );
+                action_feed.append(makeDiv(
+                    body['player_id'] + ' calls ' + 
+                    body['called']
+                ));
             case ServerCode.PLAYERFOLD:
-                return;
+                action_feed.append(makeDiv(
+                    body['player_id'] + ' folds'
+                ));
             case ServerCode.PLAYERRAISE:
-                return;
+                updateMoney(
+                    body['player_id'],
+                    body['player_money']
+                );
+                action_feed.append(makeDiv(
+                    body['player_id'] + ' raised ' + 
+                    body['raised_by']
+                ));
             case ServerCode.PLAYERALLIN:
-                return;
+                updateMoney(
+                    body['player_id'], 
+                    body['player_money']
+                );
+                action_feed.append(makeDiv(
+                    body['player_id'] +
+                    ' went all in with ' + 
+                    data['allin_stake']
+                ));
             case ServerCode.PLAYERAMOUNTTOCALL:
-                return;
+                action_feed.append(makeDiv(
+                    body['player_id'] +  ', ' +
+                    body['to_call'] + ' to call'
+                ));
             case ServerCode.PUBLICCARDSHOW:
-                return;
+                action_feed.append(makeDiv(
+                    body['player_id'] + ' has ' +
+                    body['player_cards']
+                ));
             case ServerCode.DECLAREPREMATUREWINNER:
-                return;
+                updateMoney(
+                    body['player_id'],
+                    body['player_money']
+                );
+                action_feed.append(makeDiv(
+                    body['player_id'] + ' has won' + 
+                    body['won']
+                ));
             case ServerCode.DECLAREFINISHEDWINNER:
-                return;
+                updateMoney(
+                    body['player_id'],
+                    body['player_money']
+                );
+                action_feed.append(
+                    body['player_id'] + ' has won + ' + 
+                    body['won'] + ' with ' + 
+                    body['hand']
+                )
             case ServerCode.ROUNDFINISHED:
-                return;
+                action_feed.append(makeDiv(
+                    'Round Finished'
+                ));
         }
     };
 

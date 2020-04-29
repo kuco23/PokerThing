@@ -4,7 +4,7 @@
     },
     "public_out": {
         "NEWROUND": [],
-        "NEWTURN": ["turn", "table"],
+        "NEWTURN": ["turn"],
         "SMALLBLIND": ["player_id", "turn_stake"],
         "BIGBLIND": ["player_id", "turn_stake"],
         "PLAYERAMAUNTTOCALL": ["player_id", "to_call"],
