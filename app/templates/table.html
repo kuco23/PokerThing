@@ -10,24 +10,34 @@
         PLAYERRAISE: 9, PLAYERALLIN: 10,
         PLAYERAMOUNTTOCALL: 11, PUBLICCARDSHOW: 12,
         DECLAREPREMATUREWINNER: 13, DECLAREFINISHEDWINNER: 14,
-        ROUNDFINISHED: 15, INTRODUCEPLAYER: 16
+        ROUNDFINISHED: 15, PLAYERJOINED: 16, PLAYERSETUP: 17
     };
     var ClientCode = {
-        MESSAGE: -6, FOLD: -5, CHECK: -4,
-        CALL: -3, RAISE: -2, ALLIN: -1
+        MESSAGE: -6, FOLD: -5, CHECK: -4, CALL: -3, 
+        RAISE: -2, ALLIN: -1
     };
+
+    function divOfSpam(array, id) {
+        let html = "<div id='" + id + "'>";
+        array.forEach(function(s) {
+            html.append("<spam>" + s + "</spam>");
+        });
+        return html + "</div>";
+    }
 </script>
 
-<div id='action_out'></div>
+<div id='action_feed'></div>
 <div id='action_in'>
     <input type=submit name='check' id='check' value='CHECK' />
+    <input type=submit name='call' id='call' value='CALL' />
     <input type=submit name='fold' id='fold' value='FOLD' />
     <label for='amount'>AMOUNT</label>
     <input type=range name='amount' id='amount' />
     <input type=submit name='raise' id='raise' value='RAISE' />
+    <input type=submit name='allin' id='allin' value='ALLIN' />
 </div>
 
-<div id='table_cards'></div>
+<div id='board_cards'></div>
 <div id='player_cards'></div>
 <div id='player_list'></div>
 <div id='state'></div>
@@ -45,8 +55,8 @@
     const message_out = $("#message_out");
     const message_send = $('#send');
     const action_in = $('#action_in');
-    const action_out = $('#action_out');
-    const table_cards = $('#table_cards');
+    const action_feed = $('#action_feed');
+    const board_cards = $('#board_cards');
     const player_cards = $('#player_cards');
     const player_list = $('#player_list');
     const state = $('#state');
@@ -61,35 +71,34 @@
         console.log('Socket Closed');
     };
     ws.onmessage = function(rcv) {
-        let server_data = JSON.parse(rcv.data);
-        switch (server_data.id) {
-            case ServerCode.INTRODUCEPLAYER:
-                let data = server_data.data;
-                $.cookie("player_id", data.player_id);
-                $.cookie('player_name', data.player_name);
-                $.cookie('player_money', data.player_money);
-                player_list.append(
-                    '<div ' + 'id=' + data.player_id + '>' +
-                        '<span>' + data.player_name + '</span>' +
-                        '<span>' + data.player_money + '</span>' +
-                    '</div>' 
-                );
+        let server_sent = JSON.parse(rcv.data);
+        let body = server_sent.data;
+        switch (server_sent.id) {
+            case ServerCode.PLAYERJOINED:
+                $.cookie("player_id", body.player_id);
+                $.cookie('player_name', body.player_name);
+                $.cookie('player_money', body.player_money);
+                player_list.append(divOfSpam([
+                    body.player_id, 
+                    body.player_name, 
+                    body.player_money
+                ]));
             case ServerCode.MESSAGE:
-                console.log('inner' + server_data.message);
-                message_out.append(
-                    "<div>" +
-                        "<span>" + server_data.username + "</span>" +
-                        "<span>" + server_data.message + "</span>" +
-                    "</div>"
-                );
+                console.log('inner' + server_sent.message);
+                message_out.append(divOfSpam([
+                    body.username, body.message
+                ]));
             case ServerCode.NEWROUND:
-                return;
+                action_feed.append(divOfSpam([
+                    "new round"
+                ]));
             case ServerCode.NEWTURN:
-                return;
+                action_feed.append(divOfSpam([body.turn]));
+                board_cards.append(body.cards);
             case ServerCode.DEALTCARDS:
-                player_cards.text(server_data.data)
+                player_cards.text(body.cards)
             case ServerCode.SMALLBLIND:
-                return;
+                
             case ServerCode.BIGBLIND:
                 return;
             case ServerCode.PLAYERCHECK:
@@ -114,6 +123,23 @@
                 return;
         }
     };
+
+    $('#check').clck(function() {
+        return;
+    });
+    $('#call').clck(function() {
+        return;
+    });
+    $('#fold').clck(function() {
+        return;
+    });
+    $('#raise').clck(function() {
+        return;
+    });
+    $('#allin').clck(function() {
+        return;
+    });
+
     message_send.click(function() {
         ws.send(JSON.stringify({
             id: ClientCode.MESSAGE,

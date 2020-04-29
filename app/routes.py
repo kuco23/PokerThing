@@ -120,10 +120,11 @@ async def database(request):
 async def feed(request, ws):
     table = game[TABLE_ID]
     username = request.cookies.get('username')
-    table.execute(
-        TableCode.NEWPLAYER, 
+    table.executeTableIn(
+        TableCode.NEWPLAYER, None,
         name = username, sock = ws
     )
+    table.executeTableIn(TableCode.STARTROUND)
     try:
         while True:
             client_data = json.loads(await ws.recv())

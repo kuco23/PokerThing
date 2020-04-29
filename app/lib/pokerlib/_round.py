@@ -63,8 +63,7 @@ class AbstractRound(ABC):
 
             self.privateOut(
                 RoundPrivateOutId.DEALTCARDS,
-                player.id,
-                cards = list(player.cards)
+                player.id
             )
 
         next(self._turn_generator)

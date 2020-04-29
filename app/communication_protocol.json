@@ -1,0 +1,30 @@
+{
+    "ClientCode": {
+        "MESSAGE": [], 
+        "FOLD": [], 
+        "CHECK": [],
+        "CALL": [], 
+        "RAISE": [], 
+        "ALLIN": []
+    },
+    "ServerCode": {
+        "PLAYERSETUP": ["player_id", "player_name", "player_money"],
+        "DEALTCARDS": ["cards"],
+        "NEWROUND": null,
+        "NEWTURN": ["turn", "table"],
+        "SMALLBLIND": ["player_id", "small_blind", "stake"],
+        "BIGBLIND": ["player_id", "big_blind", "stake"],
+        "PLAYERAMAUNTTOCALL": ["player_id", "to_call"],
+        "PLAYERFOLD": ["player_id"],
+        "PLAYERCHECK": ["player_id"],
+        "PLAYERCALL": ["player_id", "called"],
+        "PLAYERRAISE": ["player_id", "raised_by"],
+        "PLAYERALLIN": ["player_id", "allin_stake"],
+        "PUBLICCARDSHOW": ["player_id", "cards"],
+        "DECLAREPREMATUREWINNER": ["player_id", "won"],
+        "DECLAREFINISHEDWINNER": ["player_id", "won", "kickers"],
+        "ROUNDFINISHED": null,
+        "MESSAGE": ["username", "message"],
+        "PLAYERJOINED": ["player_id", "player_name", "player_money"]
+    }
+}

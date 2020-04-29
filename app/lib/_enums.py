@@ -7,7 +7,7 @@ from .pokerlib.enums import (
 class ServerCode(IntEnum):
     MESSAGE = -6
     PLAYERJOINED = 16
-    STARTROUND = 17
+    PLAYERSETUP = 17
 
 for e in RoundPublicOutId:
     extend_enum(ServerCode, e.name, e.value)

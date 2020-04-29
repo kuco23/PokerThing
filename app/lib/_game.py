@@ -4,7 +4,8 @@ from ._gamedb import *
 from ._enums import (
     ServerCode, ClientCode, TableCode, 
     DbTable, DbPlayerTurn, DbPlayerAction,
-    RoundPublicInId, RoundPublicOutId
+    RoundPublicInId, RoundPublicOutId, 
+    RoundPrivateOutId
 )
 
 class ServerPlayer(Player):
@@ -27,6 +28,12 @@ class ServerPlayerGroup(PlayerGroup): pass
 class ServerRound(Round):
     __cards = [[j, i] for i in range(4) for j in range(13)]
 
+    def privateOut(self, user_id, out_id, **kwargs):
+        if out_id == RoundPrivateOutId.DEALTCARDS:
+            player = self.players.getPlayerById(user_id)
+            kwargs.update({'cards': player.cards})
+        super().privateOut(self, user_id, out_id, kwargs)
+
     def publicOut(self, out_id, **kwargs):
         kwargs.update({
             'turn_id': self.turn, 
@@ -37,6 +44,11 @@ class ServerRound(Round):
                 kwargs['player_id'] # format hand description!
             )
             kwargs.update({'hand': player.hand.handenum})
+        elif out_id == RoundPublicOutId.PUBLICCARDSHOW:
+            player = self.players.getPlayerById(
+                kwargs['player_id']
+            )
+            kwargs.update({'cards': player.cards})
         super().publicOut(self, out_id, **kwargs)
 
 # serves the table, by translating the Client and Server
@@ -81,18 +93,33 @@ class ServerTable(Table):
         player_id, withdrawn = self.gamebase.registerPlayer(
             username, self.id, self.buyin
         )
-        self._addPlayers([ServerPlayer(
-            account_id, self.id, player_id, 
+        player = ServerPlayer(
+            account_id, self.id, player_id,
             username, withdrawn, sock
-        )])
-        self.notifyAll({
-            "id": ServerCode.INTRODUCEPLAYER,
+        )
+        player.send({
+            "id": ServerCode.PLAYERSETUP,
             "data": {
                 "player_id": player_id,
                 "player_name": username,
                 "player_money": withdrawn
             }
         })
+        self.notifyAll({
+            "id": ServerCode.PLAYERJOINED,
+            "data": {
+                "player_id": player_id,
+                "player_name": username,
+                "player_money": withdrawn
+            }
+        })
+        self._addPlayers([player])
+
+        self._addPlayers([ServerPlayer(
+            account_id, self.id, player_id, 
+            username, withdrawn, sock
+        )])
+        
     
     async def _onPlayerLeft(self, player_id):
         player = self.all_players.getPlayerById(player_id)
@@ -133,7 +160,6 @@ class ServerTable(Table):
         if player: player.send({
             "id": ServerCode.DEALTCARDS,
             "data": {
-                "player_id": player_id,
                 "cards": cards
             }
         })
@@ -259,7 +285,7 @@ class ServerTable(Table):
             }
         })
     
-    async def _onPublicCardShow(self, player_id):
+    async def _onPublicCardShow(self, player_id, cards):
         player = self.players.getPlayerById()
         self.notifyAll({
             "id": ServerCode.PUBLICCARDSHOW,
@@ -293,13 +319,17 @@ class ServerTable(Table):
             }
         })
     
-    async def _onRoundFinished(self): pass
+    async def _onRoundFinished(self): 
+        self.notifyAll({
+            "id": ServerCode.ROUNDFINISHED
+        })
     
     async def executeTableIn(self, code_id, player_id, **data):
         if code_id == TableCode.PLAYERJOINED:
-            self._onPlayerAdd()
-            if not self.round and self: 
-                self._onStartRound()
+            self._onPlayerAdd(
+                player_id, 
+                data['name'], data['sock']
+            )
         elif code_id == TableCode.PLAYERLEFT:
             self._onPlayerLeft(player_id)
         elif code_id == TableCode.STARTROUND:
@@ -335,8 +365,8 @@ class ServerTable(Table):
             self._onNewRound()
         elif code_id == RoundPublicOutId.DEALTCARDS:
             self._onDealtCards(
-                player_id, data['cards'], 
-                data['round_id']
+                player_id, 
+                data['cards'], data['round_id']
             )
         elif code_id == RoundPublicOutId.NEWTURN:
             self._onNewTurn(
@@ -383,7 +413,7 @@ class ServerTable(Table):
             )
         elif code_id == RoundPublicOutId.PUBLICCARDSHOW:
             self._onPublicCardShow(
-                data['player_id']
+                data['player_id'], data['cards']
             )
         elif code_id == RoundPublicOutId.DECLAREPREMATUREWINNER:
             self._onDeclarePrematureWinner(
