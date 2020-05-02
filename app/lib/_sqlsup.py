@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS {DbTable.PLAYERCARDS.value} (
 )
 """
 make_actions_table = f"""
-CREATE TABLE IF NOT EXISTS {DbTable.ACTIONS.value} (
+CREATE TABLE IF NOT EXISTS {DbTable.PLAYERACTIONS.value} (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     round_id INTEGER NOT NULL,
@@ -69,9 +69,9 @@ CREATE TABLE IF NOT EXISTS {DbTable.ACTIONS.value} (
     action_id INTEGER NOT NULL,
     amount INTEGER DEFAULT 0,
     FOREIGN KEY (round_id)
-        REFERENCES {DbTable.ROUND.value}(id)
+        REFERENCES {DbTable.ROUNDS.value}(id)
     FOREIGN KEY (account_id) 
-        REFERENCES {DbTable.PLAYERACTIONS.value}(id),
+        REFERENCES {DbTable.PLAYERACTIONS.value}(id)
 )
 """
 

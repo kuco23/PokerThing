@@ -377,9 +377,9 @@ class Round(AbstractRound):
     PrivateOut = namedtuple('PrivateOut', ['id', 'user_id', 'data'])
 
     def __init__(self, *args):
-        super().__init__(*args)
         self.public_out_queue = deque([])
         self.private_out_queue = deque([])
+        super().__init__(*args)
 
     def publicIn(self, player_id, action, raise_by=0):
         """Processes invalidated user input"""

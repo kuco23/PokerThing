@@ -28,16 +28,19 @@ class ServerPlayerGroup(PlayerGroup): pass
 class ServerRound(Round):
     __cards = [[j, i] for i in range(4) for j in range(13)]
 
-    def privateOut(self, user_id, out_id, **kwargs):
+    def privateOut(self, player_id, out_id, **kwargs):
         if out_id == RoundPrivateOutId.DEALTCARDS:
-            player = self.players.getPlayerById(user_id)
-            kwargs.update({'player_cards': player.cards})
-        super().privateOut(self, user_id, out_id, kwargs)
+            player = self.players.getPlayerById(player_id)
+            kwargs.update({
+                'player_cards': player.cards,
+                'player_id': player_id
+            })
+        super().privateOut(player_id, out_id, **kwargs)
 
     def publicOut(self, out_id, **kwargs):
         kwargs.update({
             'turn_id': self.turn, 
-            'round_id': self.round,
+            'round_id': self.id,
         })
         player_id = kwargs.get('player_id')
         if player_id is not None: 
@@ -50,26 +53,27 @@ class ServerRound(Round):
             kwargs['player_cards'] = player.cards
         elif out_id == RoundPublicOutId.NEWTURN:
             kwargs['board_cards'] = self.board
-        super().publicOut(self, out_id, **kwargs)
+        super().publicOut(out_id, **kwargs)
 
 # serves the table, by translating the Client and Server
 # codes into round input and vice-versa
 class ServerTable(Table):
     Round = ServerRound
+    PlayerSprite = ServerPlayerGroup
 
     def __init__(
-        self, db, _id, players, 
-        buyin, small_blind, big_blind
+        self, db, _id, seats, buyin, 
+        small_blind, big_blind
     ):
         super().__init__(
-            self, _id, players, buyin, 
+            _id, seats, buyin, 
             small_blind, big_blind
         )
         self.gamebase = db
-        self.round_id = self.gamebase.startRound()
+        self.round_id = self.gamebase.registerNewRound(_id)
 
     async def notifyAll(self, data):
-        for player in self.players: player.send(data)
+        for player in self.players: await player.send(data)
 
     def _popRoundQueue(self):
         public_out_queue = self.round.public_out_queue.copy()
@@ -81,24 +85,22 @@ class ServerTable(Table):
     async def _processRoundQueue(self):
         private, public = self._popRoundQueue()
         for out in private: 
-            self.executeRoundOut(
-                out.id, out.player_id, **out.data
-            )
+            await self._executeRoundOut(out.id, **out.data)
         for out in public: 
-            self.executeRoundOut(out.id, None, **out.data)
+            await self._executeRoundOut(out.id, **out.data)
     
     async def _onPlayerAdd(self, username, sock):
         account_id = self.gamebase.accountIdFromUsername(
             username
         )
         player_id, withdrawn = self.gamebase.registerPlayer(
-            username, self.id, self.buyin
+            account_id, self.id, self.buyin
         )
         player = ServerPlayer(
             account_id, self.id, player_id,
             username, withdrawn, sock
         )
-        player.send({
+        await player.send({
             "id": ServerCode.PLAYERSETUP,
             "data": {
                 "player_id": player_id,
@@ -106,7 +108,7 @@ class ServerTable(Table):
                 "player_money": withdrawn
             }
         })
-        self.notifyAll({
+        await self.notifyAll({
             "id": ServerCode.PLAYERJOINED,
             "data": {
                 "player_id": player_id,
@@ -115,13 +117,7 @@ class ServerTable(Table):
             }
         })
         self._addPlayers([player])
-
-        self._addPlayers([ServerPlayer(
-            account_id, self.id, player_id, 
-            username, withdrawn, sock
-        )])
         
-    
     async def _onPlayerLeft(self, player_id):
         player = self.all_players.getPlayerById(player_id)
         if player is not None: 
@@ -129,21 +125,29 @@ class ServerTable(Table):
             self.gamebase.unregisterPlayer(
                 player.account_id, self.id
             )
+            await self.notifyAll({
+                "id": ServerCode.PLAYERLEFT,
+                "data": {
+                    "player_id": player_id
+                }
+            })
     
     async def _onStartRound(self):
         while self.newRound(self.round_id):
-            self.round_id = self.gamebase.startRound()
+            self.round_id = self.gamebase.registerNewRound(
+                self.id
+            )
             if self.round is not None:
-                self._processRoundQueue()
+                await self._processRoundQueue()
 
     async def _onNewRound(self):
-        self.notifyAll({"id": ServerCode.NEWROUND})
+        await self.notifyAll({"id": ServerCode.NEWROUND})
     
     async def _onNewTurn(self, turn, board, round_id):
         self.gamebase.insertBoard(
-            round_id, turn.value, board
+            round_id, turn.value, dumps(board)
         )
-        self.notifyAll({
+        await self.notifyAll({
             "id": ServerCode.NEWTURN,
             "data": {
                 "turn": turn.value,
@@ -158,7 +162,7 @@ class ServerTable(Table):
             round_id, player_id, cards
         )
         player = self.all_players.getPlayerById(player_id)
-        if player: player.send({
+        if player: await player.send({
             "id": ServerCode.DEALTCARDS,
             "data": {
                 "cards": cards
@@ -174,7 +178,7 @@ class ServerTable(Table):
             DbPlayerAction.SMALLBLIND.value, 
             stake
         )
-        self.notifyAll({
+        await self.notifyAll({
             "id": ServerCode.SMALLBLIND,
             "data": {
                 "player_id": player_id,
@@ -193,7 +197,7 @@ class ServerTable(Table):
             DbPlayerAction.BIGBLIND.value, 
             stake
         )
-        self.notifyAll({
+        await self.notifyAll({
             "id": ServerCode.BIGBLIND,
             "data": {
                 "player_id": player_id,
@@ -207,7 +211,7 @@ class ServerTable(Table):
         self, player_id, to_call
     ):
         player = self.all_players.getPlayerById(player_id)
-        if player: player.send({
+        if player: await player.send({
             "id": ServerCode.PLAYERAMOUNTTOCALL,
             "data": {
                 "player_id": player_id,
@@ -222,7 +226,7 @@ class ServerTable(Table):
             round_id, player_id, turn_id, 
             DbPlayerAction.FOLD
         )
-        self.notifyAll({
+        await self.notifyAll({
             "id": ServerCode.PLAYERFOLD,
             "data": {
                 "player_id": player_id
@@ -236,7 +240,7 @@ class ServerTable(Table):
             round_id, player_id, turn_id,
             DbPlayerAction.CHECK
         )
-        self.notifyAll({
+        await self.notifyAll({
             "id": ServerCode.PLAYERCHECK,
             "data": {
                 "player_id": player_id
@@ -251,7 +255,7 @@ class ServerTable(Table):
             round_id, player_id, turn_id,
             DbPlayerAction.CALL, called
         )
-        self.notifyAll({
+        await self.notifyAll({
             "id": ServerCode.PLAYERCALL,
             "data": {
                 "player_id": player_id,
@@ -268,7 +272,7 @@ class ServerTable(Table):
             round_id, player_id, turn_id,
             DbPlayerAction.RAISE, raised_by
         )
-        self.notifyAll({
+        await self.notifyAll({
             "id": ServerCode.PLAYERRAISE,
             "data": {
                 "player_id": player_id,
@@ -285,7 +289,7 @@ class ServerTable(Table):
             round_id, player_id, turn_id,
             DbPlayerAction.ALLIN, allin_stake
         )
-        self.notifyAll({
+        await self.notifyAll({
             "id": ServerCode.PLAYERALLIN,
             "data": {
                 "player_id": player_id,
@@ -296,7 +300,7 @@ class ServerTable(Table):
     
     async def _onPublicCardShow(self, player_id, cards):
         player = self.players.getPlayerById()
-        self.notifyAll({
+        await self.notifyAll({
             "id": ServerCode.PUBLICCARDSHOW,
             "data": {
                 "player_id": player_id,
@@ -307,7 +311,7 @@ class ServerTable(Table):
     async def _onDeclarePrematureWinner(
         self, player_id, player_money, won
     ):
-        self.notifyAll({
+        await self.notifyAll({
             "id": ServerCode.DECLAREPREMATUREWINNER,
             "data": {
                 "player_id": player_id,
@@ -321,7 +325,7 @@ class ServerTable(Table):
         self, player_id, player_money, won, hand, 
         kickers, turn_id, round_id
     ):
-        self.notifyAll({
+        await self.notifyAll({
             "id": ServerCode.DECLAREFINISHEDWINNER,
             "data": {
                 "player_id": player_id,
@@ -333,117 +337,119 @@ class ServerTable(Table):
         })
     
     async def _onRoundFinished(self): 
-        self.notifyAll({
+        await self.notifyAll({
             "id": ServerCode.ROUNDFINISHED
         })
-    
-    async def executeTableIn(self, code_id, player_id, **data):
-        if code_id == TableCode.PLAYERJOINED:
-            self._onPlayerAdd(
-                player_id, data['name'], data['sock']
-            )
-        elif code_id == TableCode.PLAYERLEFT:
-            self._onPlayerLeft(player_id)
-        elif code_id == TableCode.STARTROUND:
-            self._onStartRound()
-    
-    async def executeRoundIn(self, code_id, player_id, **data):
-        if code_id == ClientCode.FOLD:
-            self.round.publicIn(
-                player_id, RoundPublicInId.FOLD
-            )
-        elif code_id == ClientCode.CHECK:
-            self.round.publicIn(
-                player_id, RoundPublicInId.CHECK
-            )
-        elif code_id == ClientCode.CALL:
-            self.round.publicIn(
-                player_id, RoundPublicInId.CALL
-            )
-        elif code_id == ClientCode.RAISE:
-            self.round.publicIn(
-                player_id, RoundPublicInId.RAISE, 
-                data['raised_by']
-            )
-        elif code_id == ClientCode.ALLIN:
-            self.round.publicIn(
-                player_id, RoundPublicInId.ALLIN
-            )
-        self._processRoundQueue()
 
-    # should probably a private method
-    async def executeRoundOut(self, code_id, player_id, **data):
+    async def _executeRoundOut(self, code_id, **data):
         if code_id == RoundPublicOutId.NEWROUND:
-            self._onNewRound()
-        elif code_id == RoundPublicOutId.DEALTCARDS:
-            self._onDealtCards(
-                player_id, 
+            await self._onNewRound()
+        elif code_id == RoundPrivateOutId.DEALTCARDS:
+            await self._onDealtCards(
+                data['player_id'], 
                 data['cards'], data['round_id']
             )
         elif code_id == RoundPublicOutId.NEWTURN:
-            self._onNewTurn(
+            await self._onNewTurn(
                 data['turn'], data['board_cards'], 
                 data['round_id']
             )
         elif code_id == RoundPublicOutId.SMALLBLIND:
-            self._onSmallBlind(
+            await self._onSmallBlind(
                 data['player_id'], data['player_money'],
                 data['turn_stake'], data['round_id']
             )
         elif code_id == RoundPublicOutId.BIGBLIND:
-            self._onBigBlind(
+            await self._onBigBlind(
                 data['player_id'], data['player_money'],
                 data['turn_stake'], data['round_id']
             )
         elif code_id == RoundPublicOutId.PLAYERAMOUNTTOCALL:
-            self._onPlayerAmountToCall(
+            await self._onPlayerAmountToCall(
                 data['player_id'], data['to_call']
             )
         elif code_id == RoundPublicOutId.PLAYERFOLD:
-            self._onPlayerFold(
+            await self._onPlayerFold(
                 data['player_id'], data['round_id'],
                 data['turn_id']
             )
         elif code_id == RoundPublicOutId.PLAYERCHECK:
-            self._onPlayerCheck(
+            await self._onPlayerCheck(
                 data['player_id'], data['round_id'],
                 data['turn_id']
             )
         elif code_id == RoundPublicOutId.PLAYERCALL:
-            self._onPlayerCall(
+            await self._onPlayerCall(
                 data['player_id'], data['player_money'],
                 data['called'], data['round_id'], 
                 data['turn_id']
             )
         elif code_id == RoundPublicOutId.PLAYERRAISE:
-            self._onPlayerRaise(
+            await self._onPlayerRaise(
                 data['player_id'], data['player_money'],
                 data['raised_by'], data['round_id'], 
                 data['turn_id']
             )
         elif code_id == RoundPublicOutId.PLAYERALLIN:
-            self._onPlayerAllin(
+            await self._onPlayerAllin(
                 data['player_id'], data['player_money'],
                 data['all_in_stake'], data['round_id'], 
                 data['turn_id']
             )
         elif code_id == RoundPublicOutId.PUBLICCARDSHOW:
-            self._onPublicCardShow(
+            await self._onPublicCardShow(
                 data['player_id'], data['player_cards']
             )
         elif code_id == RoundPublicOutId.DECLAREPREMATUREWINNER:
-            self._onDeclarePrematureWinner(
+            await self._onDeclarePrematureWinner(
                 data['player_id'], data['player_money'],
                 data['money_won']
             )
         elif code_id == RoundPublicOutId.DECLAREFINISHEDWINNER:
-            self._onDeclareFinishedWinner(
+            await self._onDeclareFinishedWinner(
                 data['player_id'], data['player_money'],
                 data['money_won'], data['hand'], 
                 data['kickers'], data['turn_id'],
                 data['round_id']
             )
         elif code_id == RoundPublicOutId.ROUNDFINISHED:
-            self._onRoundFinished()               
+            await self._onRoundFinished()    
+    
+    async def executeRoundIn(self, code_id, player_id, **data):
+        if code_id == ClientCode.FOLD:
+            await self.round.publicIn(
+                player_id, RoundPublicInId.FOLD
+            )
+        elif code_id == ClientCode.CHECK:
+            await self.round.publicIn(
+                player_id, RoundPublicInId.CHECK
+            )
+        elif code_id == ClientCode.CALL:
+            await self.round.publicIn(
+                player_id, RoundPublicInId.CALL
+            )
+        elif code_id == ClientCode.RAISE:
+            await self.round.publicIn(
+                player_id, RoundPublicInId.RAISE, 
+                data['raised_by']
+            )
+        elif code_id == ClientCode.ALLIN:
+            await self.round.publicIn(
+                player_id, RoundPublicInId.ALLIN
+            )
+        else: return
+        await self._processRoundQueue()   
+
+    async def executeTableIn(self, code_id, **data):
+        if code_id == TableCode.PLAYERJOINED:
+            await self._onPlayerAdd(
+                data['username'], data['sock']
+            )
+        elif code_id == TableCode.PLAYERLEFT:
+            await self._onPlayerLeft(
+                data['player_id']
+            )
+        elif code_id == TableCode.STARTROUND:
+            await self._onStartRound()        
 
 class ServerGame(Game): pass

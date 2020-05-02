@@ -23,7 +23,21 @@ tables = [[100] for _ in tables_ids]
 players = [[i, choice(tables_ids)] for i in range(n)]
 '''
 
-with sqlite3.connect('game.db') as con:
+insert_player = """
+INSERT INTO {} (id, account_id, pokertable_id) 
+VALUES (?, ?, ?)
+""".format("PLAYERS")
+with sqlite3.connect('game2.db') as con:
     cursor = con.cursor()
-    cursor.execute('SELECT * FROM ACCOUNTS')
-    a = cursor.fetchall()
+    cursor.execute("SELECT * FROM ACCOUNTS WHERE username='kuco23'")
+    assets, *_ = cursor.fetchall()[0]
+    withdrawn = 100
+    player_id = cursor.execute("SELECT MAX(id) FROM players")
+    player_id = player_id.fetchall()[0][0] + 1
+    cursor.executemany(
+        insert_player,
+        [(player_id, 10, 10)]
+    )
+    con.commit()
+
+    

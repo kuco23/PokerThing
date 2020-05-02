@@ -120,29 +120,30 @@ async def database(request):
 async def feed(request, ws):
     table = game[TABLE_ID]
     username = request.cookies.get('username')
-    table.executeTableIn(
-        TableCode.NEWPLAYER, None,
-        name = username, sock = ws
+    await table.executeTableIn(
+        TableCode.PLAYERJOINED,
+        username = username, sock = ws
     )
-    table.executeTableIn(TableCode.STARTROUND)
+    await table.executeTableIn(TableCode.STARTROUND)
     try:
         while True:
             client_data = json.loads(await ws.recv())
             client_code = client_data.get('id')
             if client_code == ClientCode.MESSAGE:
-                table.sendToAll({
+                await table.notifyAll({
                     'id': ServerCode.MESSAGE,
                     'data': {
                         'username': username,
                         'message': client_data['data']
                     }
                 })
-            else: table.executeRoundIn(
-                client_code, username
+            else: await table.executeRoundIn(
+                client_code, username, 
+                **client_data['data']
             )
     except ConnectionClosed:
-        table.executeTableIn(
-            TableCode.PLAYERLEFT, username
+        await table.executeTableIn(
+            TableCode.PLAYERLEFT, player_id = username
         )
 
 @app.route('/table', methods = ['GET'])

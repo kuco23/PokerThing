@@ -8,6 +8,7 @@ class ServerCode(IntEnum):
     MESSAGE = -6
     PLAYERJOINED = 16
     PLAYERSETUP = 17
+    PLAYERLEFT = 18
 
 for e in RoundPublicOutId:
     extend_enum(ServerCode, e.name, e.value)

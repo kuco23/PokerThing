@@ -4,14 +4,18 @@ from ._player import Player, PlayerGroup
 from ._round import Round
 
 class Table:
-    Round = Round
+    PlayerSprite = PlayerGroup
+    RoundClass = Round
 
-    def __init__(self, _id, players, buyin, small_blind, big_blind):
+    def __init__(
+        self, _id, seats, buyin, small_blind, big_blind
+    ):
         self.id = _id
+        self.seats = seats
         self.small_blind = small_blind
         self.big_blind = big_blind
         self.buyin = buyin
-        self.players = players
+        self.players = self.PlayerSprite([])
         self.button = 0
         self.round = None
         self.interrupt = False
@@ -19,7 +23,9 @@ class Table:
         self._player_addition_schedule = dict()
 
     def __bool__(self):
-        return 2 <= len(self.players.getNotBrokePlayers()) <= 9
+        return 2 <= len(
+            self.players.getNotBrokePlayers()
+        ) <= self.seats
     
     def __eq__(self, other):
         return self.id == other.id
@@ -42,7 +48,9 @@ class Table:
     def all_players(self):
         return add(
             self.players, 
-            list(self._player_addition_schedule.values())
+            Table.PlayerSprite(
+                self._player_addition_schedule.values()
+            )
         )
     
     def _addPlayers(self, players):
@@ -78,10 +86,14 @@ class Table:
         
     # called only when round is finished
     def _updatePlayers(self):
-        self.players.extend(self._player_addition_schedule.values())
         self.players.remove(self._player_removal_schedule.values())
-        self._player_addition_schedule.clear()
         self._player_removal_schedule.clear()
+        while (
+            len(self.players) < self.seats and
+            len(self._player_addition_schedule) > 0
+        ):
+            id_, player = self._player_addition_schedule.popitem()
+            self.players.append(player)
 
     def newRound(self, round_id):
         if self.round: return False

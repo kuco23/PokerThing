@@ -10,7 +10,7 @@ app = Sanic(__name__)
 conn = sqlite3.connect(config.DATABASE_PATH)
 dbase = SqLite(conn)
 gamedb = GameDb(conn)
-game = ServerGame(gamedb)
-game += ServerTable(0, gamedb, ServerPlayerGroup([]), 1000, 10, 20)
+game = ServerGame()
+game += ServerTable(gamedb, 0, 9, 1000, 10, 20)
 
 from . import routes

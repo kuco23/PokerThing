@@ -2,12 +2,16 @@ from hashlib import sha256
 from ._enums import DbTable
 
 account_id_from_username = """
-SELECT account_id FROM {} WHERE username = {{}}
+SELECT id FROM {} WHERE username = '{{}}'
 """.format(DbTable.ACCOUNTS.value)
 
 account_select = """
-SELECT money FROM {} WHERE account_id = {{}}
+SELECT money FROM {} WHERE id = {{}}
 """.format(DbTable.ACCOUNTS.value)
+
+select_last_player_id = """
+SELECT MAX(id) FROM {}
+""".format(DbTable.PLAYERS.value)
 
 insert_player = """
 INSERT INTO {} (id, account_id, pokertable_id) 
@@ -15,7 +19,7 @@ VALUES (?, ?, ?)
 """.format(DbTable.PLAYERS.value)
 
 withdraw_from_account = """
-UPDATE {} SET money={{}} WHERE account_id={{}}
+UPDATE {} SET money={{}} WHERE id={{}}
 """.format(DbTable.ACCOUNTS.value)
 
 delete_from_players = """
@@ -36,7 +40,7 @@ VALUES (?, ?, ?)
 """.format(DbTable.PLAYERCARDS.value)
 
 insert_player_action = """
-INSERT INTO {} (round_id, account_id, turn_id, action, amount) 
+INSERT INTO {} (round_id, account_id, turn_id, action_id, amount) 
 VALUES (?, ?, ?, ?, ?)
 """.format(DbTable.PLAYERACTIONS.value)
 
@@ -55,6 +59,7 @@ class GameDb:
         self.cursor.execute(
             withdraw_from_account.format(money, account_id)
         )
+        self.conn.commit()
         return withdraw
     
     def accountIdFromUsername(self, username):
@@ -63,14 +68,19 @@ class GameDb:
         )
         return self.cursor.fetchall()[0][0]
     
+    def getLastPlayerId(self):
+        self.cursor.execute(select_last_player_id)
+        last_id = self.cursor.fetchall()[0][0]
+        return last_id or 0
+
     def registerPlayer(self, account_id, table_id, money):
         self.cursor.execute(account_select.format(account_id))
         assets, *_ = self.cursor.fetchall()[0]
         withdrawn = self.withdrawFromAccount(account_id, money, assets)
-        player_id = self._encodePlayerId(account_id, table_id)
+        player_id = self.getLastPlayerId() + 1
         self.cursor.executemany(
             insert_player,
-            [(player_id, account_id, table_id, withdrawn)]
+            [(player_id, account_id, table_id)]
         )
         self.conn.commit()
         return player_id, withdrawn
@@ -84,7 +94,8 @@ class GameDb:
     def registerNewRound(self, table_id):
         round_id, *_ = self.cursor.execute(
             get_last_round_id.format()
-        ).cursor.fetchall()[0]
+        ).fetchall()[0]
+        if round_id is None: round_id = -1
         self.cursor.executemany(
             insert_round,
             [(round_id + 1, table_id)]

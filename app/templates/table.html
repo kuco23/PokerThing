@@ -32,11 +32,12 @@
         return "<div>" + text + "</div>";
     }
     function divOfSpam(text_array, id) {
-        let html = "<div id='" + id + "'>";
+        let node_id = (id != null) ? " id='" + id + "'" : "";
+        let node = "<div" + node_id + "'>";
         text_array.forEach(function(s) {
-            html.append("<spam>" + s + "</spam>");
+            node += "<spam>" + s + "</spam>";
         });
-        return html + "</div>";
+        return node + "</div>";
     }
     function updateMoney(player_id, money) {
         $('#' + player_id + ' > spam:nth-child(3)').text(
@@ -51,7 +52,8 @@
         PLAYERRAISE: 9, PLAYERALLIN: 10,
         PLAYERAMOUNTTOCALL: 11, PUBLICCARDSHOW: 12,
         DECLAREPREMATUREWINNER: 13, DECLAREFINISHEDWINNER: 14,
-        ROUNDFINISHED: 15, PLAYERJOINED: 16, PLAYERSETUP: 17
+        ROUNDFINISHED: 15, PLAYERJOINED: 16, PLAYERSETUP: 17,
+        PLAYERLEFT: 18
     };
     const ClientCode = {
         MESSAGE: -6, FOLD: -5, CHECK: -4, 
@@ -78,28 +80,38 @@
         console.log('Socket Closed');
     };
     ws.onmessage = function(rcv) {
+        console.log("receiving");
         let server_sent = JSON.parse(rcv.data);
         let body = server_sent.data;
-        let user = $.cookie("player_name");
         switch (server_sent.id) {
-            case ServerCode.PLAYERJOINED:
-                $.cookie("player_id", body.player_id);
-                $.cookie('player_name', body.player_name);
-                $.cookie('player_money', body.player_money);
-                player_list.append(divOfSpam([
-                    body.player_id, body.player_name, 
-                ]), toString(data['player_id']));
             case ServerCode.MESSAGE:
                 message_out.append(divOfSpam([
                     body['username'], body['message']
                 ]));
+                break;
+            case ServerCode.PLAYERJOINED:
+                player_list.append(divOfSpam([
+                    body.player_id, body.player_name, 
+                ]), toString(body['player_id']));
+                break;
+            case ServerCode.INTRODUCEPLAYER:
+                player_list.append(divOfSpam([
+                    body['player_id'], body['player_name'], 
+                ]), toString(body['player_id']));
+                break;
+            case ServerCode.PLAYERLEFT:
+                console.log("playerleft");
+                break;
             case ServerCode.NEWROUND:
                 action_feed.append(makeDiv("new round"));
+                break;
             case ServerCode.NEWTURN:
                 action_feed.append(makeDiv(body.turn));
                 board_cards.append(body['board_cards']);
+                break;
             case ServerCode.DEALTCARDS:
                 player_cards.text(body['player_cards']);
+                break;
             case ServerCode.SMALLBLIND:
                 updateMoney(
                     body['player_id'], 
@@ -109,6 +121,7 @@
                     "player gave small blind of " + 
                     body['stake']
                 ));
+                break;
             case ServerCode.BIGBLIND:
                 updateMoney(
                     body['player_id'],
@@ -119,10 +132,12 @@
                     ' gave big blind of ' + 
                     body['stake']
                 ));
+                break;
             case ServerCode.PLAYERCHECK:
                 action_feed.append(makeDiv(
                     body['player_id'] + ' checks'
                 ));
+                break;
             case ServerCode.PLAYERCALL:
                 updateMoney(
                     body['player_id'], 
@@ -132,10 +147,12 @@
                     body['player_id'] + ' calls ' + 
                     body['called']
                 ));
+                break;
             case ServerCode.PLAYERFOLD:
                 action_feed.append(makeDiv(
                     body['player_id'] + ' folds'
                 ));
+                break;
             case ServerCode.PLAYERRAISE:
                 updateMoney(
                     body['player_id'],
@@ -145,6 +162,7 @@
                     body['player_id'] + ' raised ' + 
                     body['raised_by']
                 ));
+                break;
             case ServerCode.PLAYERALLIN:
                 updateMoney(
                     body['player_id'], 
@@ -153,18 +171,21 @@
                 action_feed.append(makeDiv(
                     body['player_id'] +
                     ' went all in with ' + 
-                    data['allin_stake']
+                    body['allin_stake']
                 ));
+                break;
             case ServerCode.PLAYERAMOUNTTOCALL:
                 action_feed.append(makeDiv(
                     body['player_id'] +  ', ' +
                     body['to_call'] + ' to call'
                 ));
+                break;
             case ServerCode.PUBLICCARDSHOW:
                 action_feed.append(makeDiv(
                     body['player_id'] + ' has ' +
                     body['player_cards']
                 ));
+                break;
             case ServerCode.DECLAREPREMATUREWINNER:
                 updateMoney(
                     body['player_id'],
@@ -174,6 +195,7 @@
                     body['player_id'] + ' has won' + 
                     body['won']
                 ));
+                break;
             case ServerCode.DECLAREFINISHEDWINNER:
                 updateMoney(
                     body['player_id'],
@@ -184,30 +206,58 @@
                     body['won'] + ' with ' + 
                     body['hand']
                 )
+                break;
             case ServerCode.ROUNDFINISHED:
                 action_feed.append(makeDiv(
                     'Round Finished'
                 ));
+                break;
+            default:
+                console.log("Not Recognized");
         }
     };
 
-    $('#check').clck(function() {
-        return;
+    $('#check').click(function() {
+        ws.send(JSON.strigify({
+            id: ClientCode.CHECK,
+            data: {}
+        }));
     });
-    $('#call').clck(function() {
-        return;
+    $('#call').click(function() {
+        ws.send(JSON.stringify({
+            id: ClientCode.CALL,
+            data: {}
+        }));
     });
-    $('#fold').clck(function() {
-        return;
+    $('#fold').click(function() {
+        ws.send(JSON.stringify({
+            id: ClientCode.FOLD,
+            data: {}
+        }));
     });
-    $('#raise').clck(function() {
-        return;
+    $('#raise').click(function() {
+        let raise_by = action_in.find('#amount').val();
+        ws.send(JSON.stringify({
+            id: ClientCode.RAISE,
+            data: {
+                raise_by: raise_by
+            }
+        }));
     });
-    $('#allin').clck(function() {
-        return;
+    $('#allin').click(function() {
+        ws.send(JSON.stringify({
+            id: ClientCode.ALLIN,
+            data: {}
+        }));
     });
 
     message_send.click(function() {
+        console.log("sending");
+        let d = JSON.stringify({
+            id: ClientCode.MESSAGE,
+            data: message_in.val()
+        });
+        console.log(d);
         ws.send(JSON.stringify({
             id: ClientCode.MESSAGE,
             data: message_in.val()
