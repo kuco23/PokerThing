@@ -383,7 +383,7 @@ class Round(AbstractRound):
 
     def publicIn(self, player_id, action, raise_by=0):
         """Processes invalidated user input"""
-        self._respondToAction(action, raise_by)
+        self._respondToAction(player_id, action, raise_by)
 
     def privateOut(self, user_id, out_id, **kwargs):
         """Player out implementation"""

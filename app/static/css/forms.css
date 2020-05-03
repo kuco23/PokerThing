@@ -29,7 +29,8 @@ input.futuristic-input-text:focus {
   border: 2px solid rgba(256,256,256,.4);
   transition: border 0.8s;
 }
-input.futuristic-input-button {
+input.futuristic-input-button,
+button.futuristic-input-button {
   width: 25%;
   padding: 4px;
   color: rgba(256,0,0,.4);
@@ -38,7 +39,9 @@ input.futuristic-input-button {
   border-radius: 5px;
 }
 input.futuristic-input-button:hover,
-input.futuristic-input-button:active {
+input.futuristic-input-button:active,
+button.futuristic-input-button:hover,
+button.futuristic-input-button:active {
   cursor: pointer;
   color: inherit;
   border: 2px solid orange;

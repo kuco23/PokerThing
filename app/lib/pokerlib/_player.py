@@ -66,6 +66,11 @@ class PlayerGroup(list):
         for player in self:
             if player.id == _id:
                 return player
+    
+    def getPlayerByAttr(self, attr, val):
+        for player in self:
+            if getattr(player, attr) == val:
+                return player
 
     def previousActivePlayer(self, i):
         j = self.previousActiveIndex(i)

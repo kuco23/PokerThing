@@ -1,14 +1,115 @@
-#tablechat {
-    position: fixed;
-    bottom: 0;
+#pokertable {
+    display: flex;
+    position: absolute;
+    flex-flow: column nowrap;
+    justify-content: stretch;
+    align-items: center;
     width: 100%;
-    height: 25%;
-    background-color: rgba(60, 60, 60, .3);
+    height: 100%;
 }
-#playerinfo {
-    position: fixed;
-    right: 0;
-    top: 0;
-    height: 75%;
+
+#actionFeed, #boardCards, 
+#actionIn, #pokertableChat {
+    width: 75%;
+    background-color: rgba(0, 0, 0, .4);
+    box-shadow: 0.5rem 0.3rem 0.3rem black;
+    border: 2px solid black;
+    border-radius: 0.2rem;
+}
+
+#actionFeed {
+    display: flex;
+    flex-wrap: column wrap;
+    align-items: center;
+    justify-content: center;
+    height: 25%;
+    margin: 2rem;
+    padding: 1rem;
+    font-size: 2.5rem;
+    overflow: auto;
+}
+#actionFeed > div {
+    margin: 0.2rem 0 0.2rem 1;
+    padding: 0.5rem;
+    color: white;
+}
+
+#boardCards {
+    margin: 1rem;
+    padding: 1rem;
+    text-align: center;
+    border: 2px solid orange;
+}
+#boardCards > span {
+    color: orange;
     background-color: black;
 }
+
+#actionIn {
+    width: 75%;
+    margin: 2rem;
+    padding: 1rem;
+}
+
+#playerCards {
+    margin: 0.5rem;
+    padding: 0.2rem;
+}
+
+#pokertableChat {
+    width: 75%;
+    height: 25%;
+    overflow: auto;
+    margin: 1rem;
+    padding: 1rem;
+    text-align: center;
+    color: black;
+}
+#pokertableChat > span > input {
+    width: 50%;
+    color: white;
+    padding-left: 0.3rem;
+    padding-right: 0.3rem;
+    background-color: inherit;
+    border: 1px solid gray;
+    border-radius: 0.2rem;
+}
+#pokertableChat > span > input:focus {
+    border: 1px solid white;
+    transition: border 1s;
+}
+#pokertableChat > span > button {
+    width: 10%;
+    color: gray;
+    padding: 0.07rem;
+    background-color: inherit;
+    border: 1px solid gray;
+    border-radius: 0.2rem;
+}
+#pokertableChat > span > button:hover {
+    cursor: pointer;
+    color: white;
+    background-color: rgba(0,0,0,.1);
+    border: 1px solid white;
+}
+#messageOuts {
+    display: flex;
+    flex-flow: column wrap;
+    justify-content: center;
+    padding: 1rem;
+    overflow: auto;
+}
+div.message {
+    margin: 0.2rem;
+    padding: 0.2rem;
+    font-size: 1.2rem;
+    text-align: left;
+}
+div.message > spam:first-child {
+    padding-right: 1rem;
+    color: orange;
+}
+div.message > spam:last-child {
+    color: white;
+}
+

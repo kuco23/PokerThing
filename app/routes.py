@@ -13,9 +13,6 @@ from app import app, dbase, game, gamedb, config
 import sys
 sys.stdout = open('log.txt', 'a')
 
-TABLE_ID = 0
-MONEY = 1000
-
 app.static('/css/main.css', 'app/static/css/main.css')
 app.static('/css/base.css', 'app/static/css/base.css')
 app.static('/css/forms.css', 'app/static/css/forms.css')
@@ -118,7 +115,7 @@ async def database(request):
 
 @app.websocket('/tablefeed')
 async def feed(request, ws):
-    table = game[TABLE_ID]
+    table = game[0]
     username = request.cookies.get('username')
     await table.executeTableIn(
         TableCode.PLAYERJOINED,
@@ -129,6 +126,7 @@ async def feed(request, ws):
         while True:
             client_data = json.loads(await ws.recv())
             client_code = client_data.get('id')
+            print(client_data)
             if client_code == ClientCode.MESSAGE:
                 await table.notifyAll({
                     'id': ServerCode.MESSAGE,
@@ -143,7 +141,8 @@ async def feed(request, ws):
             )
     except ConnectionClosed:
         await table.executeTableIn(
-            TableCode.PLAYERLEFT, player_id = username
+            TableCode.PLAYERLEFT, 
+            username = username
         )
 
 @app.route('/table', methods = ['GET'])
