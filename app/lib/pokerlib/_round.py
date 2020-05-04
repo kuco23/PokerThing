@@ -374,7 +374,7 @@ class AbstractRound(ABC):
 
 class Round(AbstractRound):
     PublicOut = namedtuple('PublicOut', ['id', 'data'])
-    PrivateOut = namedtuple('PrivateOut', ['id', 'user_id', 'data'])
+    PrivateOut = namedtuple('PrivateOut', ['id', 'player_id', 'data'])
 
     def __init__(self, *args):
         self.public_out_queue = deque([])
@@ -385,10 +385,10 @@ class Round(AbstractRound):
         """Processes invalidated user input"""
         self._respondToAction(player_id, action, raise_by)
 
-    def privateOut(self, user_id, out_id, **kwargs):
+    def privateOut(self, out_id, player_id, **kwargs):
         """Player out implementation"""
         # A solution for interacting with an outside io
-        out = self.PrivateOut(user_id, out_id, kwargs)
+        out = self.PrivateOut(player_id, out_id, kwargs)
         self.private_out_queue.append(out)
 
     def publicOut(self, out_id, **kwargs):

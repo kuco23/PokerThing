@@ -1,20 +1,40 @@
-#pokertable {
+#pokertableWrap {
     display: flex;
-    position: absolute;
-    flex-flow: column nowrap;
-    justify-content: stretch;
-    align-items: center;
+    flex-flow: row wrap;
+    justify-content: space-between;
+    align-items: stretch;
     width: 100%;
+    height: 100%;
+    padding: 2rem;
+}
+
+
+#pokertableView {
+    order: 1;
+    flex-grow: 1.2;
+    display: flex;
+    flex-flow: column wrap;
+    align-items: stretch;
+}
+
+#playerStats {
+    order: 2;
+    flex-grow: 1;
+    display: flex;
+    flex-flow: column wrap;
+    justify-content: flex-start;
+    align-content: stretch;
+}
+
+#pokertableView, #playerStats {
+    padding: 1rem;
     height: 100%;
 }
 
-#actionFeed, #boardCards, 
-#actionIn, #pokertableChat {
-    width: 75%;
-    background-color: rgba(0, 0, 0, .4);
-    box-shadow: 0.5rem 0.3rem 0.3rem black;
-    border: 2px solid black;
-    border-radius: 0.2rem;
+
+#playerList {
+    height: 100%;
+    overflow: auto;
 }
 
 #actionFeed {
@@ -22,50 +42,64 @@
     flex-wrap: column wrap;
     align-items: center;
     justify-content: center;
-    height: 25%;
-    margin: 2rem;
+    height: 20%;
     padding: 1rem;
     font-size: 2.5rem;
     overflow: auto;
 }
+
+#boardCards {
+    height: 10%;
+    padding: 1rem;
+    text-align: center;
+}
+
+#playerCards {
+    height: 10%;
+    padding: 0.2rem;
+}
+
+#actionIn {
+    height: 10%;
+    padding: 1rem;
+}
+
+#pokertableChat {
+    height: 35%;
+    padding: 0.5rem;
+    overflow: auto;
+    text-align: center;
+}
+
+#actionFeed, #boardCards, 
+#playerCards, #actionIn, 
+#pokertableChat {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+#actionFeed, #boardCards, 
+#playerCards, #actionIn, 
+#pokertableChat,
+#playerList {
+    background-color: rgba(0, 0, 0, .4);
+    box-shadow: 0.5rem 0.3rem 0.3rem black;
+    border: 2px solid black;
+    border-radius: 0.2rem;
+}
+
+
 #actionFeed > div {
-    margin: 0.2rem 0 0.2rem 1;
     padding: 0.5rem;
     color: white;
 }
 
-#boardCards {
-    margin: 1rem;
-    padding: 1rem;
-    text-align: center;
-    border: 2px solid orange;
-}
 #boardCards > span {
     color: orange;
     background-color: black;
 }
 
-#actionIn {
-    width: 75%;
-    margin: 2rem;
-    padding: 1rem;
-}
-
-#playerCards {
-    margin: 0.5rem;
-    padding: 0.2rem;
-}
-
-#pokertableChat {
-    width: 75%;
-    height: 25%;
-    overflow: auto;
-    margin: 1rem;
-    padding: 1rem;
-    text-align: center;
-    color: black;
-}
-#pokertableChat > span > input {
+#pokertableChat span > input {
     width: 50%;
     color: white;
     padding-left: 0.3rem;
@@ -74,11 +108,11 @@
     border: 1px solid gray;
     border-radius: 0.2rem;
 }
-#pokertableChat > span > input:focus {
+#pokertableChat span > input:focus {
     border: 1px solid white;
     transition: border 1s;
 }
-#pokertableChat > span > button {
+#pokertableChat span > button {
     width: 10%;
     color: gray;
     padding: 0.07rem;
@@ -86,7 +120,7 @@
     border: 1px solid gray;
     border-radius: 0.2rem;
 }
-#pokertableChat > span > button:hover {
+#pokertableChat span > button:hover {
     cursor: pointer;
     color: white;
     background-color: rgba(0,0,0,.1);
@@ -99,17 +133,29 @@
     padding: 1rem;
     overflow: auto;
 }
+
 div.message {
-    margin: 0.2rem;
     padding: 0.2rem;
     font-size: 1.2rem;
     text-align: left;
 }
-div.message > spam:first-child {
+div.message > span:first-child {
     padding-right: 1rem;
     color: orange;
 }
-div.message > spam:last-child {
+div.message > span:last-child {
     color: white;
 }
 
+div.player {
+    padding: 0.2rem;
+    font-size: 1.2rem;
+    text-align: left;
+}
+div.player > span:first-child {
+    color: orange;
+    padding-right: 0.5rem;
+}
+div.player > span:nth-child(2) {
+    color: lime;
+}

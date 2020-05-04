@@ -28,12 +28,13 @@ class ServerPlayerGroup(PlayerGroup): pass
 class ServerRound(Round):
     __cards = [[j, i] for i in range(4) for j in range(13)]
 
-    def privateOut(self, player_id, out_id, **kwargs):
+    def privateOut(self, out_id, player_id, **kwargs):
         if out_id == RoundPrivateOutId.DEALTCARDS:
             player = self.players.getPlayerById(player_id)
             kwargs.update({
                 'player_cards': player.cards,
-                'player_id': player_id
+                'player_name': player.name,
+                'round_id': self.id
             })
         super().privateOut(player_id, out_id, **kwargs)
 
@@ -75,17 +76,11 @@ class ServerTable(Table):
 
     async def notifyAll(self, data):
         for player in self.players: await player.send(data)
-
-    def _popRoundQueue(self):
-        public_out_queue = self.round.public_out_queue.copy()
-        self.round.public_out_queue.clear()
-        private_out_queue = self.round.public_out_queue.copy()
-        self.round.private_out_queue.clear()
-        return private_out_queue, public_out_queue
     
     async def _processRoundQueue(self):
         private, public = self._popRoundQueue()
         for out in private: 
+            out.data['player_id'] = out.player_id
             await self._executeRoundOut(out.id, **out.data)
         for out in public: 
             await self._executeRoundOut(out.id, **out.data)
@@ -105,7 +100,13 @@ class ServerTable(Table):
             "id": ServerCode.PLAYERSETUP,
             "data": {
                 "player_name": player_name,
-                "player_money": withdrawn
+                "player_money": withdrawn,
+                "player_names": [
+                    player.name for player in self.players
+                ],
+                "player_moneys": [
+                    player.money for player in self.players
+                ]
             }
         })
         await self.notifyAll({
@@ -118,7 +119,7 @@ class ServerTable(Table):
         self._addPlayers([player])
         
     async def _onPlayerLeft(self, player_name):
-        player = self.all_players.getPlayerByAttr(
+        player = self.players.getPlayerByAttr(
             'name', player_name
         )
         if player is not None: 
@@ -162,11 +163,12 @@ class ServerTable(Table):
         self.gamebase.insertPlayerCards(
             round_id, player_id, cards
         )
-        player = self.all_players.getPlayerById(player_id)
-        if player: await player.send({
+        player = self.players.getPlayerById(player_id)
+        if player is not None: await player.send({
             "id": ServerCode.DEALTCARDS,
             "data": {
-                "cards": cards
+                "player_cards": cards,
+                "player_name": player_name
             }
         })
     
@@ -350,7 +352,7 @@ class ServerTable(Table):
         elif code_id == RoundPrivateOutId.DEALTCARDS:
             await self._onDealtCards(
                 data['player_id'], data['player_name'],
-                data['cards'], data['round_id']
+                data['player_cards'], data['round_id']
             )
         elif code_id == RoundPublicOutId.NEWTURN:
             await self._onNewTurn(
@@ -423,7 +425,7 @@ class ServerTable(Table):
             await self._onRoundFinished()    
     
     async def executeRoundIn(self, code_id, player_name, **data):
-        player = self.all_players.getPlayerByAttr(
+        player = self.players.getPlayerByAttr(
             'name', player_name
         )
         if code_id == ClientCode.FOLD:

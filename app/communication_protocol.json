@@ -8,7 +8,9 @@
         "ALLIN": null
     },
     "ServerCode": {
-        "PLAYERSETUP": ["player_name", "player_name", "player_money"],
+        "PLAYERSETUP": [
+            "player_name", "player_money", "player_names", "player_moneys"
+        ],
         "DEALTCARDS": ["player_cards"],
         "NEWROUND": null,
         "NEWTURN": ["turn", "board_cards"],

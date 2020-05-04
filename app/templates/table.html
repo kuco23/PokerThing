@@ -2,28 +2,31 @@
 
 {% block table %}
 
-<div id='pokertable'>
-    <div id='playerList'></div>
-    <div id='actionFeed'>Round Off</div>
-    <div id='boardCards'></div>
-    <div id='actionIn'>
-        <input type=submit name='check' id='check' value='CHECK' />
-        <input type=submit name='call' id='call' value='CALL' />
-        <input type=submit name='fold' id='fold' value='FOLD' />
-        <label for='amount'>AMOUNT</label>
-        <input type=range name='amount' id='amount' />
-        <input type=submit name='raise' id='raise' value='RAISE' />
-        <input type=submit name='allin' id='allin' value='ALLIN' />
+<div id='pokertableWrap'>
+
+    <div id='playerStats'>
+        <div id='playerList' class='player'></div>
     </div>
 
-    <div id='playerCards'></div>
+    <div id='pokertableView'>
+        <div id='actionFeed'>Round Off</div>
+        <div id='boardCards'></div>
+        <div id='actionIn'>
+            <input type=submit name='check' id='check' value='CHECK' />
+            <input type=submit name='call' id='call' value='CALL' />
+            <input type=submit name='fold' id='fold' value='FOLD' />
+            <input type=range name='amount' id='amount' min=0 max=1000/>
+            <input type=submit name='raise' id='raise' value='RAISE' />
+            <input type=submit name='allin' id='allin' value='ALLIN' />
+        </div>
+        <div id='playerCards'></div>
 
-    <div id='pokertableChat'>
-        <span>
-            <input type=text name='message' id='message_in' />
-            <button name='send' id='send'>Send</button>
-        </span>
-        <div id='message_out'></div>
+        <div id='pokertableChat'>
+            <span>
+                <input type=text name='message' id='message_in' />
+                <button name='send' id='send'>Send</button>
+            </span>
+        <div id='message_out' class='message'></div>
     </div>
 </div>
 
@@ -62,10 +65,9 @@
         });
         return node;
     }
-    function updateMoney(player_id, money) {
-        $('#' + player_id + ' > spam:nth-child(3)').text(
-            money
-        );
+    function updataPlayerMoney(player_name, money) {
+        $('#' + player_name + ' > spam:nth-child(3)').text(money);
+        $('#amount').slider("option", "max", money)
     }
 
     const ServerCode = {
@@ -118,22 +120,30 @@
                 playerList.append(divOfSpam([
                     body['player_name'],
                     body['player_money']
-                ]), body['player_name']);
+                ], body['player_name'], "player"));
                 break;
-            case ServerCode.INTRODUCEPLAYER:
+            case ServerCode.PLAYERSETUP:
+                let player_names = body['player_names'];
+                let player_moneys = body['player_moneys'];
+                for (let i = 0; i < player_names.length; i++) {
+                    playerList.append(divOfSpam([
+                        player_names[i],
+                        player_moneys[i]
+                    ], player_names[i], "player"))
+                }
                 playerList.append(divOfSpam([
                     body['player_name'], 
                     body['player_money']
-                ]), body['player_name']);
+                ], body['player_name'], "player"));
                 break;
             case ServerCode.PLAYERLEFT:
                 console.log("playerleft");
                 break;
             case ServerCode.NEWROUND:
-                actionFeed.html(makeDiv("new round"));
+                actionFeed.append(makeDiv("new round"));
                 break;
             case ServerCode.NEWTURN:
-                actionFeed.html(makeDiv(
+                actionFeed.append(makeDiv(
                     "New Turn, " + body['turn']
                 ));
                 boardCards.html(makeDiv(
@@ -146,107 +156,107 @@
                 );
                 break;
             case ServerCode.SMALLBLIND:
-                updateMoney(
+                updataPlayerMoney(
                     body['player_name'], 
                     body['player_money']
                 );
-                actionFeed.html(makeDiv(
+                actionFeed.append(makeDiv(
                     body['player_name'] + 
                     " gave small blind of " + 
                     body['stake']
                 ));
                 break;
             case ServerCode.BIGBLIND:
-                updateMoney(
+                updataPlayerMoney(
                     body['player_name'],
                     body['player_money']
                 );
-                actionFeed.html(makeDiv(
+                actionFeed.append(makeDiv(
                     body['player_name'] + 
                     ' gave big blind of ' + 
                     body['stake']
                 ));
                 break;
             case ServerCode.PLAYERCHECK:
-                actionFeed.html(makeDiv(
+                actionFeed.append(makeDiv(
                     body['player_name'] + 
                     ' checks'
                 ));
                 break;
             case ServerCode.PLAYERCALL:
-                updateMoney(
+                updataPlayerMoney(
                     body['player_name'], 
                     body['player_money']
                 );
-                actionFeed.html(makeDiv(
+                actionFeed.append(makeDiv(
                     body['player_name'] + 
                     ' calls ' + 
                     body['called']
                 ));
                 break;
             case ServerCode.PLAYERFOLD:
-                actionFeed.html(makeDiv(
+                actionFeed.append(makeDiv(
                     body['player_name'] + 
                     ' folds'
                 ));
                 break;
             case ServerCode.PLAYERRAISE:
-                updateMoney(
+                updataPlayerMoney(
                     body['player_name'],
                     body['player_money']
                 );
-                actionFeed.html(makeDiv(
+                actionFeed.append(makeDiv(
                     body['player_name'] + 
                     ' raised ' + 
                     body['raised_by']
                 ));
                 break;
             case ServerCode.PLAYERALLIN:
-                updateMoney(
+                updataPlayerMoney(
                     body['player_name'], 
                     body['player_money']
                 );
-                actionFeed.html(makeDiv(
+                actionFeed.append(makeDiv(
                     body['player_name'] +
                     ' went all in with ' + 
                     body['allin_stake']
                 ));
                 break;
             case ServerCode.PLAYERAMOUNTTOCALL:
-                actionFeed.html(makeDiv(
+                actionFeed.append(makeDiv(
                     body['player_name'] +  ', ' +
                     body['to_call'] + ' to call'
                 ));
                 break;
             case ServerCode.PUBLICCARDSHOW:
-                actionFeed.html(makeDiv(
+                actionFeed.append(makeDiv(
                     body['player_name'] + ' has ' +
                     body['player_cards']
                 ));
                 break;
             case ServerCode.DECLAREPREMATUREWINNER:
-                updateMoney(
+                updataPlayerMoney(
                     body['player_name'],
                     body['player_money']
                 );
-                actionFeed.html(makeDiv(
+                actionFeed.append(makeDiv(
                     body['player_name'] + ' has won' + 
                     body['won']
                 ));
                 break;
             case ServerCode.DECLAREFINISHEDWINNER:
-                updateMoney(
+                updataPlayerMoney(
                     body['player_name'],
                     body['player_money']
                 );
-                actionFeed.html(
+                actionFeed.append(
                     body['player_name'] + ' has won + ' + 
                     body['won'] + ' with ' + 
                     body['hand']
                 )
                 break;
             case ServerCode.ROUNDFINISHED:
-                actionFeed.html(makeDiv(
+                actionFeed.append(makeDiv(
                     'Round Finished'
                 ));
                 break;
@@ -292,13 +302,15 @@
     });
 
     message_send.click(function() {
+        let message = message_in.val();
+        if (message == "") return;
         let d = JSON.stringify({
             id: ClientCode.MESSAGE,
-            data: message_in.val()
+            data: message
         });
         ws.send(JSON.stringify({
             id: ClientCode.MESSAGE,
-            data: message_in.val()
+            data: message
         }));
         message_in.val("");
     });

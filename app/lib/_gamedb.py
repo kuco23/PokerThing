@@ -106,7 +106,7 @@ class GameDb:
     def insertPlayerCards(self, account_id, round_id, cards):
         self.cursor.executemany(
             insert_player_cards,
-            [(round_id, account_id, cards)]
+            [(round_id, account_id, str(cards))]
         )
         self.conn.commit()
     

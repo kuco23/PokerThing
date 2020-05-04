@@ -52,6 +52,13 @@ class Table:
                 self._player_addition_schedule.values()
             )
         )
+
+    def _popRoundQueue(self):
+        private_out_queue = self.round.private_out_queue.copy()
+        self.round.private_out_queue.clear()
+        public_out_queue = self.round.public_out_queue.copy()
+        self.round.public_out_queue.clear()
+        return private_out_queue, public_out_queue
     
     def _addPlayers(self, players):
         self._clearPlayersFromSchedules(players)
