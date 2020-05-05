@@ -6,7 +6,7 @@
 		<label for='text'>Search&nbsp;&nbsp;</label>
 		<input id='search-input' class='futuristic-input-text' type='text'/>
 	</span> 
-	&nbsp;&nbsp;&nbsp;&nbsp;in&nbsp;&nbsp;&nbsp;&nbsp;
+	in
 	<span id='table-choice'>
 		<select class='futuristic-input-select' id='table-select'>
 			<option>Accounts</option>
@@ -17,12 +17,14 @@
 	</span>
 </div>
 <div class='content grid-table'>
-	<table id='table-repr'></table>
+	<table id='table-repr'>
+		<tbody id='table-in'></tbody>
+	</table>
 </div>
 
 <script>
 	let table_option = $('#table-select');
-	let table_repr = $('#table-repr');
+	let table_in = $('#table-in');
 	$('#table-select > option').click(function() {
 		let option = table_option.find(':selected').text();
 		$.ajax('/database', {
@@ -32,17 +34,17 @@
             data: JSON.stringify({table: option}),
             timeout: 2000,
             success: function (data, status, xhr) {
-				table_repr.html('<tr>');
+				table_in.html('<tr>');
 				data.columns.forEach(function(x) {
-					table_repr.append('<th>' + x + '</th>');
+					table_in.append('<th>' + x + '</th>');
 				});
-				table_repr.append('</tr>');
+				table_in.append('</tr>');
 				data.rows.forEach(function(row) {
-					table_repr.append('<tr>');
+					table_in.append('<tr>');
 					row.forEach(function (td) {
-						table_repr.append('<td>' + td + '</td');
+						table_in.append('<td>' + td + '</td>');
 					});
-					table_repr.append('</tr>');
+					table_in.append('</tr>');
 				});
 			},
             error: function (jqXhr, textStatus, errorMessage) {

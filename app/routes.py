@@ -10,6 +10,8 @@ from .lib import (
 )
 from app import app, dbase, game, gamedb, config
 
+TABLE_ID = 0
+
 import sys
 sys.stdout = open('log.txt', 'a')
 
@@ -115,7 +117,7 @@ async def database(request):
 
 @app.websocket('/tablefeed')
 async def feed(request, ws):
-    table = game[0]
+    table = game[TABLE_ID]
     username = request.cookies.get('username')
     await table.executeTableIn(
         TableCode.PLAYERJOINED,
@@ -128,7 +130,7 @@ async def feed(request, ws):
             client_code = client_data.get('id')
             print(client_data)
             if client_code == ClientCode.MESSAGE:
-                await table.notifyAll({
+                await table.notifyTable({
                     'id': ServerCode.MESSAGE,
                     'data': {
                         'username': username,
@@ -148,7 +150,12 @@ async def feed(request, ws):
 @app.route('/table', methods = ['GET'])
 async def table(request):
     user = request.cookies.get('username')
-    if user: return render_template(
-        'template_table', request, {'username': user}
-    )
-    else: return response.redirect('/base')
+    if user:
+        table = game[TABLE_ID]
+        account = gamedb.accountFromUsername(user)
+        if (account and account.money >= table.minbuyin):
+            return render_template(
+                'template_table', request, 
+                {'username': user}
+            )
+    return response.redirect('/base')

@@ -11,6 +11,6 @@ conn = sqlite3.connect(config.DATABASE_PATH)
 dbase = SqLite(conn)
 gamedb = GameDb(conn)
 game = ServerGame()
-game += ServerTable(gamedb, 0, 9, 1000, 10, 20)
+game += ServerTable(gamedb, 0, 9, 1000, 200, 10, 20)
 
 from . import routes

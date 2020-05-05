@@ -9,12 +9,11 @@
     </div>
 
     <div id='pokertableView'>
-        <div id='actionFeed'>Round Off</div>
         <div id='cardDisplay'>
             <div id='boardCards'></div>
             <div id='playerCards'></div>
         </div>
-        <div id='actionIn'>
+        <div id='actionIn' class='buttonDisabled'>
             <input type=submit name='check' id='check' value='CHECK' />
             <input type=submit name='call' id='call' value='CALL' />
             <input type=submit name='fold' id='fold' value='FOLD' />
@@ -28,7 +27,8 @@
                 <input type=text name='message' id='message_in' />
                 <button name='send' id='send'>Send</button>
             </span>
-        <div id='message_out' class='message'></div>
+            <div id='message_out' class='message'></div>
+        </div>
     </div>
 </div>
 
@@ -69,7 +69,6 @@
     }
     function updataPlayerMoney(player_name, money) {
         $('#' + player_name + ' > spam:nth-child(3)').text(money);
-        $('#amount').slider("option", "max", money)
     }
 
     const ServerCode = {
@@ -77,7 +76,7 @@
         DEALTCARDS: 3, SMALLBLIND: 4, BIGBLIND: 5, 
         PLAYERCHECK: 6, PLAYERCALL: 7, PLAYERFOLD: 8, 
         PLAYERRAISE: 9, PLAYERALLIN: 10,
-        PLAYERAMOUNTTOCALL: 11, PUBLICCARDSHOW: 12,
+        PLAYERACTIONREQUIRED: 11, PUBLICCARDSHOW: 12,
         DECLAREPREMATUREWINNER: 13, 
         DECLAREFINISHEDWINNER: 14,
         ROUNDFINISHED: 15, PLAYERJOINED: 16, 
@@ -92,20 +91,29 @@
     const message_out = $("#message_out");
     const message_send = $('#send');
     const actionIn = $('#actionIn');
-    const actionFeed = $('#actionFeed');
     const boardCards = $('#boardCards');
     const playerCards = $('#playerCards');
     const playerList = $('#playerList');
 
+    function serverOut(message) {
+        message_out.append(divOfSpam([
+            "Server", message
+        ], null, "message"));
+    }
+    function disablePlayerIn() {
+        actionIn.removeClass('buttonEnabled');
+        actionIn.addClass('buttonDisabled');
+    }
+    function enablePlayerIn() {
+        actionIn.removeClass('buttonDisabled');
+        actionIn.addClass('buttonEnabled');
+    }
+
     const ws = new WebSocket(
         "ws://" + window.location.host + "/tablefeed"
     );
-    ws.onopen = function() {
-        console.log('Socket Opened');
-    };
-    ws.onclose = function() {
-        console.log('Socket Closed');
-    };
+    ws.onopen = function() {console.log('Socket Opened');};
+    ws.onclose = function() {console.log('Socket Closed');};
     ws.onmessage = function(rcv) {
         console.log("receiving");
         let server_sent = JSON.parse(rcv.data);
@@ -133,21 +141,15 @@
                         player_moneys[i]
                     ], player_names[i], "player"))
                 }
-                playerList.append(divOfSpam([
-                    body['player_name'], 
-                    body['player_money']
-                ], body['player_name'], "player"));
                 break;
             case ServerCode.PLAYERLEFT:
                 console.log("playerleft");
                 break;
             case ServerCode.NEWROUND:
-                actionFeed.append(makeDiv("new round"));
+                serverOut("New Round");
                 break;
             case ServerCode.NEWTURN:
-                actionFeed.append(makeDiv(
-                    "New Turn, " + body['turn']
-                ));
+                serverOut( "New Turn, " + body['turn']);
                 boardCards.html(makeDiv(
                     formatCards(body['board_cards'])
                 ));
@@ -162,105 +164,107 @@
                     body['player_name'], 
                     body['player_money']
                 );
-                actionFeed.html(makeDiv(
+                serverOut(
                     body['player_name'] + 
                     " gave small blind of " + 
                     body['stake']
-                ));
+                );
                 break;
             case ServerCode.BIGBLIND:
                 updataPlayerMoney(
                     body['player_name'],
                     body['player_money']
                 );
-                actionFeed.html(makeDiv(
+                serverOut(
                     body['player_name'] + 
                     ' gave big blind of ' + 
                     body['stake']
-                ));
+                );
                 break;
             case ServerCode.PLAYERCHECK:
-                actionFeed.html(makeDiv(
-                    body['player_name'] + 
-                    ' checks'
-                ));
+                serverOut(body['player_name'] + ' checks');
+                disablePlayerIn();
                 break;
             case ServerCode.PLAYERCALL:
                 updataPlayerMoney(
                     body['player_name'], 
                     body['player_money']
                 );
-                actionFeed.html(makeDiv(
-                    body['player_name'] + 
-                    ' calls ' + 
+                serverOut(
+                    body['player_name'] + ' calls ' + 
                     body['called']
-                ));
+                );
+                disablePlayerIn();
                 break;
             case ServerCode.PLAYERFOLD:
-                actionFeed.html(makeDiv(
+                serverOut(
                     body['player_name'] + 
                     ' folds'
-                ));
+                );
+                disablePlayerIn();
                 break;
             case ServerCode.PLAYERRAISE:
                 updataPlayerMoney(
                     body['player_name'],
                     body['player_money']
                 );
-                actionFeed.html(makeDiv(
+                serverOut(
                     body['player_name'] + 
                     ' raised ' + 
                     body['raised_by']
-                ));
+                );
+                disablePlayerIn();
                 break;
             case ServerCode.PLAYERALLIN:
                 updataPlayerMoney(
                     body['player_name'], 
                     body['player_money']
                 );
-                actionFeed.html(makeDiv(
+                serverOut(
                     body['player_name'] +
                     ' went all in with ' + 
                     body['allin_stake']
-                ));
+                );
+                disablePlayerIn();
                 break;
-            case ServerCode.PLAYERAMOUNTTOCALL:
-                actionFeed.append(makeDiv(
+            case ServerCode.PLAYERACTIONREQUIRED:
+                serverOut(
                     body['player_name'] +  ', ' +
                     body['to_call'] + ' to call'
-                ));
+                );
+                enablePlayerIn();
                 break;
             case ServerCode.PUBLICCARDSHOW:
-                actionFeed.append(makeDiv(
+                serverOut(
                     body['player_name'] + ' has ' +
                     body['player_cards']
-                ));
+                );
                 break;
             case ServerCode.DECLAREPREMATUREWINNER:
                 updataPlayerMoney(
                     body['player_name'],
                     body['player_money']
                 );
-                actionFeed.append(makeDiv(
+                serverOut(
                     body['player_name'] + ' has won' + 
                     body['won']
-                ));
+                );
                 break;
             case ServerCode.DECLAREFINISHEDWINNER:
                 updataPlayerMoney(
                     body['player_name'],
                     body['player_money']
                 );
-                actionFeed.append(
+                serverOut(
                     body['player_name'] + ' has won + ' + 
                     body['won'] + ' with ' + 
                     body['hand']
-                )
+                );
                 break;
             case ServerCode.ROUNDFINISHED:
-                actionFeed.append(makeDiv(
+                serverOut(
                     'Round Finished'
-                ));
+                );
                 break;
             default:
                 console.log(server_sent);

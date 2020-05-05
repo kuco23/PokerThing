@@ -1,8 +1,8 @@
-from hashlib import sha256
 from ._enums import DbTable
+from ._sqlsup import table_columns
 
-account_id_from_username = """
-SELECT id FROM {} WHERE username = '{{}}'
+account_from_username = """
+SELECT * FROM {} WHERE username = '{{}}'
 """.format(DbTable.ACCOUNTS.value)
 
 account_select = """
@@ -23,7 +23,8 @@ UPDATE {} SET money={{}} WHERE id={{}}
 """.format(DbTable.ACCOUNTS.value)
 
 delete_from_players = """
-DELETE FROM {} WHERE account_id = {{}} AND table_id = {{}}
+DELETE FROM {} 
+WHERE account_id = {{}} AND pokertable_id = {{}}
 """.format(DbTable.PLAYERS.value)
 
 get_last_round_id = """
@@ -53,37 +54,44 @@ class GameDb:
     def __init__(self, conn):
         self.conn = conn
         self.cursor = conn.cursor()
+        self._player_id = self.getLastPlayerId()
     
-    def withdrawFromAccount(self, account_id, money, withdraw):
-        if withdraw > money: withdraw = money
-        self.cursor.execute(
-            withdraw_from_account.format(money, account_id)
-        )
-        self.conn.commit()
-        return withdraw
-    
-    def accountIdFromUsername(self, username):
-        self.cursor.execute(
-            account_id_from_username.format(username)
-        )
-        return self.cursor.fetchall()[0][0]
+    @property
+    def player_id(self):
+        self._player_id += 1
+        return self._player_id
     
     def getLastPlayerId(self):
         self.cursor.execute(select_last_player_id)
         last_id = self.cursor.fetchall()[0][0]
         return last_id or 0
+    
+    def accountFromUsername(self, username):
+        self.cursor.execute(
+            account_from_username.format(username)
+        )
+        row = self.cursor.fetchall()[0]
+        return (
+            table_columns[DbTable.ACCOUNTS](*row)
+            if row[0] is not None else None
+        )
 
-    def registerPlayer(self, account_id, table_id, money):
-        self.cursor.execute(account_select.format(account_id))
-        assets, *_ = self.cursor.fetchall()[0]
-        withdrawn = self.withdrawFromAccount(account_id, money, assets)
-        player_id = self.getLastPlayerId() + 1
+    def withdrawFromAccount(self, account_id, money):
+        self.cursor.execute(
+            withdraw_from_account.format(
+                f'money - {money}', account_id
+            )
+        )
+        self.conn.commit()
+
+    def registerPlayer(
+        self, account_id, player_id, table_id
+    ):
         self.cursor.executemany(
             insert_player,
             [(player_id, account_id, table_id)]
         )
         self.conn.commit()
-        return player_id, withdrawn
     
     def unregisterPlayer(self, account_id, table_id):
         self.cursor.execute(delete_from_players.format(

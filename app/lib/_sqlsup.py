@@ -19,14 +19,13 @@ CREATE TABLE IF NOT EXISTS {DbTable.POKERTABLES.value} (
 """
 make_players_table = f"""
 CREATE TABLE IF NOT EXISTS {DbTable.PLAYERS.value} (
+    id INTEGER PRIMARY KEY,
     account_id INTEGER,
     pokertable_id INTEGER,
-    money INTEGER,
     FOREIGN KEY (account_id) 
         REFERENCES {DbTable.ACCOUNTS.value}(id),
     FOREIGN KEY (pokertable_id) 
-        REFERENCES {DbTable.POKERTABLES.value}(id),
-    PRIMARY KEY (account_id, pokertable_id)
+        REFERENCES {DbTable.POKERTABLES.value}(id)
 )
 """
 make_rounds_table = f"""
@@ -91,7 +90,7 @@ table_columns = dict(zip(DbTable, map(
     namedtuple, [table.value for table in DbTable], [
         ['id', 'username', 'password_hash', 'email', 'money'],
         ['id', 'blind'], 
-        ['account_id', 'pokertable_id', 'money'],
+        ['id', 'account_id', 'pokertable_id'],
         ['id', 'pokertable_id'],
         ['id', 'turn_id', 'round_id', 'cards'],
         ['id', 'round_id', 'account_id', 'cards'],

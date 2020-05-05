@@ -72,7 +72,9 @@ class Table:
         else:
             for player in players:
                 if player.id == self.round.current_player.id:
-                    self.round.privateIn(RoundPublicInId.FOLD)
+                    self.round.publicIn(
+                        player.id, RoundPublicInId.FOLD
+                    )
                 elif player.id in self.round:
                     player.is_folded = True
     

@@ -281,7 +281,7 @@ class AbstractRound(ABC):
         called = self.current_player.turn_stake[self.turn]
 
         self.publicOut(
-            RoundPublicOutId.PLAYERAMOUNTTOCALL,
+            RoundPublicOutId.PLAYERACTIONREQUIRED,
             player_id = self.current_player.id,
             to_call = self.turn_stake - called
         )
