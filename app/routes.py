@@ -5,15 +5,15 @@ from sanic import response
 from sanic.websocket import ConnectionClosed
 from jinja2_sanic import template, render_template, setup
 from .lib import (
-    DbTable, TableCode, ServerPlayer, 
-    ServerCode, ClientCode, TableCode
+    ServerPlayer, TableCode,
+    ServerGameCode, ClientGameCode, ClientDbCode
 )
-from app import app, dbase, game, gamedb, config
+from .lib.database import DbTable, table_enum
+from app import app, dbase, game, dbgame, dbbrowser, config
+
+from sanic.log import logger
 
 TABLE_ID = 0
-
-import sys
-sys.stdout = open('log.txt', 'a')
 
 app.static('/css/main.css', 'app/static/css/main.css')
 app.static('/css/base.css', 'app/static/css/base.css')
@@ -100,20 +100,32 @@ async def signout(request):
     del resp.cookies['username']
     return resp
 
+
 @app.route('/database', methods = ['GET', 'POST'])
 async def database(request):
     if request.method == 'POST':
-        table_str = request.json.get('table').upper()
-        table_enum = list(filter(
-            lambda en: en.name == table_str, DbTable
-        ))[0]
-        columns, rows = dbase.getTable(table_enum)
-        return response.json({'rows' : rows, 'columns': columns})
+        client_id = request.json.get('id')
+        client_data = request.json.get('data')
+
+        if client_id == ClientDbCode.GETTABLE:
+            columns, rows = dbbrowser.readTable(
+                table_enum[client_data['table']]
+            )
+        elif client_id == ClientDbCode.GETPLAYER:
+            columns, rows = dbbrowser.getPlayer(
+                client_data['account_id']
+            )
+        return response.json({
+            'rows' : rows, 'columns': columns
+        })
+
     elif request.method == 'GET':
         user = request.cookies.get('username')
         return render_template(
-            'template_database', request, {'username': user}
+            'template_database', 
+            request, {'username': user}
         )
+
 
 @app.websocket('/tablefeed')
 async def feed(request, ws):
@@ -128,10 +140,10 @@ async def feed(request, ws):
         while True:
             client_data = json.loads(await ws.recv())
             client_code = client_data.get('id')
-            print(client_data)
-            if client_code == ClientCode.MESSAGE:
+            logger.info(client_data)
+            if client_code == ClientGameCode.MESSAGE:
                 await table.notifyTable({
-                    'id': ServerCode.MESSAGE,
+                    'id': ServerGameCode.MESSAGE,
                     'data': {
                         'username': username,
                         'message': client_data['data']
@@ -142,6 +154,7 @@ async def feed(request, ws):
                 **client_data['data']
             )
     except ConnectionClosed:
+        logger.info('Connection Closed')
         await table.executeTableIn(
             TableCode.PLAYERLEFT, 
             username = username
@@ -149,10 +162,13 @@ async def feed(request, ws):
 
 @app.route('/table', methods = ['GET'])
 async def table(request):
+    table = game[TABLE_ID]
     user = request.cookies.get('username')
-    if user:
-        table = game[TABLE_ID]
-        account = gamedb.accountFromUsername(user)
+    if (
+        user and len(table.players) < table.seats and
+        table.players.getPlayerByAttr('name', user) is None
+    ):
+        account = dbgame.accountFromUsername(user)
         if (account and account.money >= table.minbuyin):
             return render_template(
                 'template_table', request, 

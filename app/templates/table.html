@@ -17,9 +17,9 @@
             <input type=submit name='check' id='check' value='CHECK' />
             <input type=submit name='call' id='call' value='CALL' />
             <input type=submit name='fold' id='fold' value='FOLD' />
-            <input type=range name='amount' id='amount' min=0 max=1000/>
-            <input type=submit name='raise' id='raise' value='RAISE' />
             <input type=submit name='allin' id='allin' value='ALLIN' />
+            <input type=submit name='raise' id='raise' value='RAISE' />
+            <input type=text name='amount' id='amount' placeholder="Raise By"/>
         </div>
 
         <div id='pokertableChat'>
@@ -34,6 +34,37 @@
 
 <script>
     'use strict'
+    
+    const ServerCode = {
+        MESSAGE: -6, 
+        NEWROUND: 1, 
+        NEWTURN: 2, 
+        DEALTCARDS: 3, 
+        SMALLBLIND: 4, 
+        BIGBLIND: 5, 
+        PLAYERCHECK: 6, 
+        PLAYERCALL: 7, 
+        PLAYERFOLD: 8, 
+        PLAYERRAISE: 9, 
+        PLAYERALLIN: 10,
+        PLAYERACTIONREQUIRED: 11,
+        PUBLICCARDSHOW: 12,
+        DECLAREPREMATUREWINNER: 13, 
+        DECLAREFINISHEDWINNER: 14,
+        ROUNDFINISHED: 15, 
+        PLAYERJOINED: 16, 
+        PLAYERSETUP: 16, 
+        PLAYERSUPDATE: 18,
+        PLAYERSBOUGHTIN: 19
+    };
+    const ClientCode = {
+        MESSAGE: -6, 
+        FOLD: -5, 
+        CHECK: -4, 
+        CALL: -3, 
+        RAISE: -2, 
+        ALLIN: -1
+    }; 
 
     const values = [
         '2', '3', '4', '5', '6', '7', '8', 
@@ -71,22 +102,7 @@
         $('#' + player_name + ' > spam:nth-child(3)').text(money);
     }
 
-    const ServerCode = {
-        MESSAGE: -6, NEWROUND: 1, NEWTURN: 2, 
-        DEALTCARDS: 3, SMALLBLIND: 4, BIGBLIND: 5, 
-        PLAYERCHECK: 6, PLAYERCALL: 7, PLAYERFOLD: 8, 
-        PLAYERRAISE: 9, PLAYERALLIN: 10,
-        PLAYERACTIONREQUIRED: 11, PUBLICCARDSHOW: 12,
-        DECLAREPREMATUREWINNER: 13, 
-        DECLAREFINISHEDWINNER: 14,
-        ROUNDFINISHED: 15, PLAYERJOINED: 16, 
-        PLAYERSETUP: 17, PLAYERLEFT: 18
-    };
-    const ClientCode = {
-        MESSAGE: -6, FOLD: -5, CHECK: -4, 
-        CALL: -3, RAISE: -2, ALLIN: -1
-    };
-
+    const pokertableChat = $("#pokertableChat");
     const message_in = $("#message_in");
     const message_out = $("#message_out");
     const message_send = $('#send');
@@ -94,11 +110,22 @@
     const boardCards = $('#boardCards');
     const playerCards = $('#playerCards');
     const playerList = $('#playerList');
+    const raiseAmount = $('#amount');
 
     function serverOut(message) {
         message_out.append(divOfSpam([
             "Server", message
         ], null, "message"));
+    }
+    function resetPlayerBoard(players) {
+        playerList.html("");
+        for (let i = 0; i < players.length; i++) {
+            let player = players[i];
+            playerList.append(divOfSpam([
+                player['name'],
+                player['money']
+            ], player['name'], "player"));
+        }
     }
     function disablePlayerIn() {
         actionIn.removeClass('buttonEnabled');
@@ -125,23 +152,16 @@
                     body['username'], 
                     body['message']
                 ], null, "message"));
-                break;
-            case ServerCode.PLAYERJOINED:
-                playerList.append(divOfSpam([
-                    body['player_name'],
-                    body['player_money']
-                ], body['player_name'], "player"));
+                message_out.scrollIntoView(true);
                 break;
             case ServerCode.PLAYERSETUP:
-                let player_names = body['player_names'];
-                let player_moneys = body['player_moneys'];
-                for (let i = 0; i < player_names.length; i++) {
-                    playerList.append(divOfSpam([
-                        player_names[i],
-                        player_moneys[i]
-                    ], player_names[i], "player"))
-                }
+                resetPlayerBoard(body['players_data']);
                 break;
+            case ServerCode.PLAYERSBOUGHTIN:
+                resetPlayerBoard(body['players_data']);
+                break;
+            case ServerCode.PLAYERSUPDATE:
+                resetPlayerBoard(body['players_data']);
             case ServerCode.PLAYERLEFT:
                 console.log("playerleft");
                 break;
@@ -292,13 +312,16 @@
         }));
     });
     $('#raise').click(function() {
-        let raise_by = actionIn.find('#amount').val();
-        ws.send(JSON.stringify({
-            id: ClientCode.RAISE,
-            data: {
-                raised_by: raised_by
-            }
-        }));
+        let raised_by = raiseAmount.val();
+        if (!isNaN(raised_by)) {
+            raised_by.text("");
+            ws.send(JSON.stringify({
+                id: ClientCode.RAISE,
+                data: {
+                    raised_by: parseInt(raised_by)
+                }
+            }));
+        }
     });
     $('#allin').click(function() {
         ws.send(JSON.stringify({

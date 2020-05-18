@@ -1,5 +1,5 @@
 from ._enums import DbTable
-from ._sqlsup import table_columns
+from ._tables import table_columns
 
 account_from_username = """
 SELECT * FROM {} WHERE username = '{{}}'
@@ -18,7 +18,7 @@ INSERT INTO {} (id, account_id, pokertable_id)
 VALUES (?, ?, ?)
 """.format(DbTable.PLAYERS.value)
 
-withdraw_from_account = """
+account_money_alter = """
 UPDATE {} SET money={{}} WHERE id={{}}
 """.format(DbTable.ACCOUNTS.value)
 
@@ -41,7 +41,7 @@ VALUES (?, ?, ?)
 """.format(DbTable.PLAYERCARDS.value)
 
 insert_player_action = """
-INSERT INTO {} (round_id, account_id, turn_id, action_id, amount) 
+INSERT INTO {} (round_id, player_id, turn_id, action_id, amount) 
 VALUES (?, ?, ?, ?, ?)
 """.format(DbTable.PLAYERACTIONS.value)
 
@@ -49,7 +49,7 @@ insert_board = """
 INSERT INTO {} (round_id, turn_id, cards) VALUES (?, ?, ?)
 """.format(DbTable.BOARDS.value)
 
-class GameDb:
+class DbGame:
 
     def __init__(self, conn):
         self.conn = conn
@@ -78,8 +78,16 @@ class GameDb:
 
     def withdrawFromAccount(self, account_id, money):
         self.cursor.execute(
-            withdraw_from_account.format(
+            account_money_alter.format(
                 f'money - {money}', account_id
+            )
+        )
+        self.conn.commit()
+    
+    def transferToAccount(self, account_id, money):
+        self.cursor.execute(
+            account_money_alter.format(
+                f'money + {money}', account_id
             )
         )
         self.conn.commit()
@@ -119,12 +127,12 @@ class GameDb:
         self.conn.commit()
     
     def insertPlayerAction(
-        self, round_id, account_id, 
+        self, round_id, player_id, 
         turn_id, action_id, amount=0
     ):
         self.cursor.executemany(
             insert_player_action,
-            [(round_id, account_id, turn_id, action_id, amount)]
+            [(round_id, player_id, turn_id, action_id, amount)]
         )
         self.conn.commit()
     

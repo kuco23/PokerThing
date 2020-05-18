@@ -8,23 +8,27 @@ class Table:
     RoundClass = Round
 
     def __init__(
-        self, _id, seats, buyin, small_blind, big_blind
+        self, _id, seats, buyin, minbuyin, 
+        small_blind, big_blind
     ):
         self.id = _id
         self.seats = seats
         self.small_blind = small_blind
         self.big_blind = big_blind
         self.buyin = buyin
-        self.players = self.PlayerSprite([])
+        self.minbuyin = minbuyin
         self.button = 0
         self.round = None
         self.interrupt = False
+        self.players = self.PlayerSprite([])
+        # players that have left
         self._player_removal_schedule = dict()
+        # player that are waiting to be added
         self._player_addition_schedule = dict()
 
     def __bool__(self):
         return 2 <= len(
-            self.players.getNotBrokePlayers()
+            self.players.getPlayersWithMoreMoney(self.minbuyin)
         ) <= self.seats
     
     def __eq__(self, other):
@@ -46,12 +50,10 @@ class Table:
                     
     @property
     def all_players(self):
-        return add(
+        return self.PlayerSprite(add(
             self.players, 
-            Table.PlayerSprite(
-                self._player_addition_schedule.values()
-            )
-        )
+            list(self._player_addition_schedule.values())
+        ))
 
     def _popRoundQueue(self):
         private_out_queue = self.round.private_out_queue.copy()
@@ -97,22 +99,29 @@ class Table:
     def _updatePlayers(self):
         self.players.remove(self._player_removal_schedule.values())
         self._player_removal_schedule.clear()
-        while (
-            len(self.players) < self.seats and
-            len(self._player_addition_schedule) > 0
-        ):
-            id_, player = self._player_addition_schedule.popitem()
-            self.players.append(player)
+        for player in self.players:
+            if player.money < self.minbuyin:
+                self._player_addition_schedule[player.id] = player
+        self.players = self.PlayerSprite(filter(
+            lambda player: player.money >= self.minbuyin,
+            self.players
+        ))
+        for _id, player in self._player_addition_schedule.items():
+            if len(self.players) >= self.seats: break
+            if player.money >= self.minbuyin:
+                self.players.append(player)
+        for player in self.players:
+            if player.id in self._player_addition_schedule:
+                self._player_addition_schedule.pop(player.id)
 
     def newRound(self, round_id):
         if self.round: return False
         self._updatePlayers()
         if not self: return False
-        round_players = self.players.getNotBrokePlayers()
-        self.button = (self.button + 1) % len(round_players)
+        self.button = (self.button + 1) % len(self.players)
         self.round = self.Round(
             round_id,
-            round_players,
+            self.players,
             self.button,
             self.small_blind,
             self.big_blind

@@ -57,7 +57,7 @@ class PlayerGroup(list):
 
     def remove(self, players):
         removal_ids = list(map(lambda x: x.id, players))
-        self[:] = list(filter(
+        self[:] = type(self)(filter(
             lambda player: player.id not in removal_ids,
             self
         ))
@@ -104,9 +104,15 @@ class PlayerGroup(list):
             self
         ))
 
-    def getNotBrokePlayers(self):
+    def getPlayersWithLessMoney(self, money):
         return type(self)(filter(
-            lambda player: player.money > 0,
+            lambda player: player.money < money,
+            self
+        ))
+    
+    def getPlayersWithMoreMoney(self, money):
+        return type(self)(filter(
+            lambda player: player.money > money,
             self
         ))
 

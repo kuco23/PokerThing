@@ -12,7 +12,8 @@
 			<option>Accounts</option>
 			<option>Players</option>
 			<option>PokerTables</option>
-			<option>Actions</option>
+			<option>PlayerActions</option>
+			<option>Rounds</option>
 		</select>
 	</span>
 </div>
@@ -23,34 +24,92 @@
 </div>
 
 <script>
+	'use strict'
+
+	let ClientCode = {
+		GETTABLE: 0,
+		GETPLAYER: 1
+	};
+
+	let DbTable = {
+		Accounts: 'accounts',
+		PokerTables: 'pokertables',
+		Players: 'players',
+		Rounds: 'rounds',
+		Boards: 'boards',
+		PlayerCards: 'playercards',
+		PlayerActions: 'playeractions'
+	};
+
 	let table_option = $('#table-select');
 	let table_in = $('#table-in');
-	$('#table-select > option').click(function() {
-		let option = table_option.find(':selected').text();
+
+	function fillTable(data) {
+		table_in.html('<tr>');
+		data.columns.forEach(function(x) {
+			table_in.append('<th>' + x + '</th>');
+		});
+		table_in.append('</tr>');
+		data.rows.forEach(function(row) {
+			table_in.append('<tr>');
+			row.forEach(function (td) {
+				table_in.append('<td>' + td + '</td>');
+			});
+			table_in.append('</tr>');
+		});
+	}
+
+	function serverSend(json, callback) {
 		$.ajax('/database', {
             type: 'POST',
             contentType: 'application/json; charset=utf-8',
             dataType: 'json',
-            data: JSON.stringify({table: option}),
+            data: json,
             timeout: 2000,
-            success: function (data, status, xhr) {
-				table_in.html('<tr>');
-				data.columns.forEach(function(x) {
-					table_in.append('<th>' + x + '</th>');
-				});
-				table_in.append('</tr>');
-				data.rows.forEach(function(row) {
-					table_in.append('<tr>');
-					row.forEach(function (td) {
-						table_in.append('<td>' + td + '</td>');
-					});
-					table_in.append('</tr>');
-				});
-			},
+            success: function (data, status, xhr) {callback(data);},
             error: function (jqXhr, textStatus, errorMessage) {
 				console.log("Error");
 			},
 		});
+	}
+
+	function updateBindings(option) {
+		if (option == "accounts") {
+			$('#table-in td:first-child').click(function() {
+				let value = $( this ).text();
+				let data = JSON.stringify({
+					id: ClientCode.GETPLAYER,
+					data: {
+						account_id: value
+					}
+				});
+				serverSend(
+					data,
+					function(data) {
+						fillTable(data);
+						updateBindings
+					}
+				);
+			});
+		}
+	}
+
+	$('#table-select > option').click(function() {
+		let option = $( this ).text();
+		let data = JSON.stringify({
+			id: ClientCode.GETTABLE,
+			data: {
+				table: DbTable[option]
+			}
+		});
+		serverSend(
+			data, 
+			function(data) {
+				fillTable(data);
+				updateBindings();
+			}
+		);
 	});
+		
 </script>
 {% endblock %}

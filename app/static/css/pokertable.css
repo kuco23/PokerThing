@@ -76,7 +76,14 @@
     flex-grow: 1;
     padding: 1rem;
     text-align: center;
+    background-color: rgba(0,0,0,.4);
     border: none;
+}
+#actionIn > input:hover {
+    cursor: pointer;
+    color: orange;
+    background-color: rgba(0,0,0,.6);
+    transition: color 0.5s;
 }
 #actionIn > input:last-child {
     border-top-right-radius: 0.2rem;
@@ -94,10 +101,7 @@
 }
 .buttonEnabled input {color: white;}
 .buttonEnabled input:hover {
-    cursor: pointer;
     color: orange;
-    background-color: rgba(0,0,0,.6);
-    transition: color 0.5s;
 }
 
 #boardCards > span {
