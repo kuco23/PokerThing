@@ -1,6 +1,8 @@
 from ._enums import DbTable
 from ._tables import *
 
+from sanic.log import logger
+
 class DbBrowser:
     
     def __init__(self, conn):

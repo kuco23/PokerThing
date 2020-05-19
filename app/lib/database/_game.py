@@ -9,10 +9,6 @@ account_select = """
 SELECT money FROM {} WHERE id = {{}}
 """.format(DbTable.ACCOUNTS.value)
 
-select_last_player_id = """
-SELECT MAX(id) FROM {}
-""".format(DbTable.PLAYERS.value)
-
 insert_player = """
 INSERT INTO {} (id, account_id, pokertable_id) 
 VALUES (?, ?, ?)
@@ -62,7 +58,9 @@ class DbGame:
         return self._player_id
     
     def getLastPlayerId(self):
-        self.cursor.execute(select_last_player_id)
+        self.cursor.execute(
+            f"SELECT MAX(id) FROM {DbTable.PLAYERS.value}"
+        )
         last_id = self.cursor.fetchall()[0][0]
         return last_id or 0
     

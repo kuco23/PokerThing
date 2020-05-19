@@ -1,26 +1,17 @@
 div.grid-table > table {
   padding: 0;
   margin: 0;
-  border-collapse: seperate;
-  border-spacing: 0.15rem;
 }
 div.grid-table > table th,
 div.grid-table > table td {
   padding: 1rem;
-  min-width: 4rem;
-  height: 1.5rem;
   text-align: center;
   background-color: rgba(0, 0, 0, .4);
-  border: 2px solid black;
+  border: 1px solid black;
 }
 div.grid-table > table th {
   color: orange;
   font-weight: normal;
-}
-div.grid-table > table td:hover {
-  cursor: default;
-  border: 2px solid orange;
-  transition: border 1s;
 }
 
 #table-specs {

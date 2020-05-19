@@ -1,26 +1,36 @@
 {% extends "template_base" %}
 
 {% block database %}
-<div id='table-specs'>
-	<span id='table-search'>
-		<label for='text'>Search&nbsp;&nbsp;</label>
-		<input id='search-input' class='futuristic-input-text' type='text'/>
-	</span> 
-	in
-	<span id='table-choice'>
-		<select class='futuristic-input-select' id='table-select'>
-			<option>Accounts</option>
-			<option>Players</option>
-			<option>PokerTables</option>
-			<option>PlayerActions</option>
-			<option>Rounds</option>
-		</select>
-	</span>
+
+<div class='container'>
+
+<div class='container' id='table-specs'>
+	<form class="form-horizontal">
+		<div class="form-group">
+			<div class="col-sm-12">
+				<select class='form-control' id='table-select'>
+					<option>Accounts</option>
+					<option>Players</option>
+					<option>PokerTables</option>
+					<option>PlayerActions</option>
+					<option>Rounds</option>
+				</select>
+			</div>
+		</div>
+		<div class="form-group">
+			<div class="col-sm-12">
+				<input id='table-search' class="form-control" type="text" placeholder="Search Table">
+			</div>
+		</div>
+	</form>
 </div>
-<div class='content grid-table'>
-	<table id='table-repr'>
-		<tbody id='table-in'></tbody>
+
+<div class='container grid-table'>
+	<table id='table_repr' class='table table-dark'>
+		<tbody id='table-out'></tbody>
 	</table>
+</div>
+
 </div>
 
 <script>
@@ -42,22 +52,10 @@
 	};
 
 	let table_option = $('#table-select');
-	let table_in = $('#table-in');
-
-	function fillTable(data) {
-		table_in.html('<tr>');
-		data.columns.forEach(function(x) {
-			table_in.append('<th>' + x + '</th>');
-		});
-		table_in.append('</tr>');
-		data.rows.forEach(function(row) {
-			table_in.append('<tr>');
-			row.forEach(function (td) {
-				table_in.append('<td>' + td + '</td>');
-			});
-			table_in.append('</tr>');
-		});
-	}
+	let table_options = $('#table-select > option');
+	let table_out = $('#table-out');
+	let table_search = $('#table-search');
+	let table = null;
 
 	function serverSend(json, callback) {
 		$.ajax('/database', {
@@ -66,35 +64,32 @@
             dataType: 'json',
             data: json,
             timeout: 2000,
-            success: function (data, status, xhr) {callback(data);},
+            success: function (data, status, xhr) {
+				table = data;
+				callback(data);
+			},
             error: function (jqXhr, textStatus, errorMessage) {
 				console.log("Error");
 			},
 		});
 	}
 
-	function updateBindings(option) {
-		if (option == "accounts") {
-			$('#table-in td:first-child').click(function() {
-				let value = $( this ).text();
-				let data = JSON.stringify({
-					id: ClientCode.GETPLAYER,
-					data: {
-						account_id: value
-					}
-				});
-				serverSend(
-					data,
-					function(data) {
-						fillTable(data);
-						updateBindings
-					}
-				);
+	function fillTable(data) {
+		table_out.html('<tr>');
+		data.columns.forEach(function(x) {
+			table_out.append('<th>' + x + '</th>');
+		});
+		table_out.append('</tr>');
+		data.rows.forEach(function(row) {
+			table_out.append('<tr>');
+			row.forEach(function (td) {
+				table_out.append('<td>' + td + '</td>');
 			});
-		}
+			table_out.append('</tr>');
+		});
 	}
 
-	$('#table-select > option').click(function() {
+	table_options.click(function() {
 		let option = $( this ).text();
 		let data = JSON.stringify({
 			id: ClientCode.GETTABLE,
@@ -102,14 +97,27 @@
 				table: DbTable[option]
 			}
 		});
-		serverSend(
-			data, 
-			function(data) {
-				fillTable(data);
-				updateBindings();
-			}
-		);
+		serverSend(data, fillTable);
 	});
+
+	table_search.on("change paste keyup", function() {
+		if (table == null) return;
+		let search = $( this ).val();
+		let selected = [];
+		table.rows.forEach(function(row) {
+			for (let i = 0; i < row.length; i++) {
+				if (String(row[i]).includes(search)) {
+					selected.push(row);
+					break;
+				}
+			}
+		});
+		fillTable({
+			columns: table.columns,
+			rows: selected
+		});
+	});
+	
 		
 </script>
 {% endblock %}

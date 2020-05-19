@@ -102,7 +102,7 @@ table_read_columns = dict(zip(DbTable, map(
     namedtuple, [table.value for table in DbTable], [
         ['username', 'email', 'money'],
         ['blind'],
-        ['account_id'], ['pokertable_id'],
+        ['account_id', 'pokertable_id'],
         ['pokertable_id'],
         ['turn_id', 'round_id', 'cards'],
         ['round_id', 'account_id', 'cards'],

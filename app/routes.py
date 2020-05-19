@@ -17,6 +17,7 @@ TABLE_ID = 0
 
 app.static('/css/main.css', 'app/static/css/main.css')
 app.static('/css/base.css', 'app/static/css/base.css')
+app.static('/css/navbar.css', 'app/static/css/navbar.css')
 app.static('/css/forms.css', 'app/static/css/forms.css')
 app.static('/css/database.css', 'app/static/css/database.css')
 app.static('/css/pokertable.css', 'app/static/css/pokertable.css')
