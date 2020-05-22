@@ -1,12 +1,10 @@
-#pokerthing_logo, #pokerthing_nav {
+.navbar-custom {
     background-color: rgb(14,14,14);
 }
-
-#pokerthing_logo > a {
+#pokerthing_nav_logo > a {
     color: orange;
 }
-
-#pokerthing_nav a:hover {
+#pokerthing_nav_content a:hover {
     color: orange;
     transition: color 0.5s;
 }

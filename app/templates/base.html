@@ -6,7 +6,6 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-
   <link rel="shortcut icon" type="image/png" href="/favicon.ico"/>
   <link rel='stylesheet' type='text/css' href="css/main.css" />
   <link rel='stylesheet' type='text/css' href="css/base.css" />
@@ -19,22 +18,24 @@
 
   <div>
 
-    <nav class="navbar navbar-inverse">
-      <div class="container-fluid row"></div>
-        <div id="pokerthing_logo" class="navbar-header">
-          <button class="navbar-toggle" data-target="#pokerthing_nav" data-toggle="collapse">
+    <nav class="navbar navbar-inverse navbar-fixed-top navbar-custom">
+      <div class="container-fluid">
+        <div id="pokerthing_nav_logo" class="navbar-header">
+          <button class="navbar-toggle" data-target="#pokerthing_nav_content" data-toggle="collapse">
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
           <a class="navbar-brand" href="/base">POKERTHING</a>
         </div>
-        <div id="pokerthing_nav" class="navbar-collapse collapse">
+        <div id="pokerthing_nav_content" class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
             <li><a href="#">Home</a></li>
             <li><a href="/table">Tables</a></li>
             <li><a href="/database">Data</a></li>
             <li><a href="#">API</a></li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
             {% if username %}
             <li><a href="/signout">Sign Out ({{ username }})</a></li>
             {% else %}
@@ -51,7 +52,6 @@
   {% block indexcontent %}{% endblock %}
   {% block database %}{% endblock %}
   {% block table %}{% endblock %}
-
 
   {% block signinform %}{% endblock %}
   {% block signupform %}{% endblock %}
