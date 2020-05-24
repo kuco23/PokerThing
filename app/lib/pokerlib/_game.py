@@ -14,3 +14,6 @@ class Game:
 
     def __getitem__(self, table_id):
         return self.tables[table_id]
+    
+    def __iter__(self):
+        return iter(self.tables.values())

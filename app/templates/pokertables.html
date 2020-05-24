@@ -1,0 +1,19 @@
+{% extends "template_base" %}
+
+{% block pokertables %}
+
+    <div class="container-fluid">
+        <div class="d-flex flex-row flex-wrap justify-content-center">
+            {% for table in table_specs.values() %}
+                <div class="p-2 pokerthing-table">
+                    {% for name, spec in table["attrs"].items() %}
+                        <span>{{ name }} = {{ spec }}</span>
+                    {% endfor %}
+                    <a href='{{ table["table_url"] }}'>
+                        Go to Table 
+                    </a>
+                </div>
+            {% endfor %}
+    </div>
+
+{% endblock %}

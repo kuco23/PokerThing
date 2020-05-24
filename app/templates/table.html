@@ -137,7 +137,7 @@
     }
 
     const ws = new WebSocket(
-        "ws://" + window.location.host + "/tablefeed"
+        "ws://" + window.location.host + "/tablefeed/" + {{ table_id|safe }}
     );
     ws.onopen = function() {console.log('Socket Opened');};
     ws.onclose = function() {console.log('Socket Closed');};

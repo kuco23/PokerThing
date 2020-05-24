@@ -1,5 +1,6 @@
 from pathlib import Path
 import configparser
+from json import loads
 
 base = 'app/config'
 config_files = [
@@ -21,9 +22,17 @@ locals().update(dict(zip(
     map(lambda key: cfg.getint(section, key), keys)
 )))
 
+section = 'table_specs'
+keys = cfg.options(section)
+locals().update(dict(zip(
+    map(lambda key: key.upper(), keys),
+    map(lambda key: loads(cfg.get(section, key)), keys)
+)))
+
 section = 'database'
 keys = cfg.options(section)
 locals().update(dict(zip(
     map(lambda key: key.upper(), keys),
     map(lambda key: cfg.get(section, key), keys)
 )))
+

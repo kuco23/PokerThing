@@ -9,11 +9,13 @@ from .lib import (
     ServerGameCode, ClientGameCode, ClientDbCode
 )
 from .lib.database import DbTable, table_enum
-from app import app, dbase, game, dbgame, dbbrowser, config
+from app import (
+    app, config, dbase, PokerGame, 
+    PokerGameDatabase, 
+    DatabaseBrowser
+)
 
 from sanic.log import logger
-
-TABLE_ID = 0
 
 app.static('/css/main.css', 'app/static/css/main.css')
 app.static('/css/base.css', 'app/static/css/base.css')
@@ -23,16 +25,14 @@ app.static('/css/database.css', 'app/static/css/database.css')
 app.static('/css/pokertable.css', 'app/static/css/pokertable.css')
 app.static('/favicon.ico', 'app/static/favicon.ico')
 
-setup(
-    app,
-    loader=DictLoader({
+setup(app, loader=DictLoader({
         "template_base": open('app/templates/base.html').read(),
         "template_signin": open('app/templates/signin.html').read(),
         "template_signup": open('app/templates/signup.html').read(),
         "template_database": open('app/templates/database.html').read(),
-        "template_table": open('app/templates/table.html').read()
-    })
-)
+        "template_table": open('app/templates/table.html').read(),
+        "template_pokertables": open('app/templates/pokertables.html').read()
+    }))
 
 def signinValidate(form):
     password = form.get('password').encode('utf-8')
@@ -109,11 +109,11 @@ async def database(request):
         client_data = request.json.get('data')
 
         if client_id == ClientDbCode.GETTABLE:
-            columns, rows = dbbrowser.readTable(
+            columns, rows = DatabaseBrowser.readTable(
                 table_enum[client_data['table']]
             )
         elif client_id == ClientDbCode.GETPLAYER:
-            columns, rows = dbbrowser.getPlayer(
+            columns, rows = DatabaseBrowser.getPlayer(
                 client_data['account_id']
             )
         return response.json({
@@ -126,11 +126,48 @@ async def database(request):
             'template_database', 
             request, {'username': user}
         )
+    
+@app.route('/pokertables', methods=['GET'])
+async def pokertables(request):
+    user = request.cookies.get('username')
+    table_specs = {
+        table.id: {
+            "attrs": {
+                "table_id": table.id,
+                "table_name": table.name,
+                "table_seats": table.seats,
+                "table_seats_free": table.seats_free,
+                "table_buyin": table.buyin,
+                "table_small_blind": table.small_blind,
+                "table_big_blind": table.big_blind
+            },
+            "table_url": app.url_for("table", table_id=table.id)
+        } for table in PokerGame
+    }
+    return render_template(
+        'template_pokertables', request, 
+        {'username': user, 'table_specs': table_specs}
+    )
 
+@app.route('/table/<table_id:number>', methods = ['GET', 'POST'])
+async def table(request, table_id):
+    table = PokerGame[table_id]
+    user = request.cookies.get('username')
+    if (
+        user and len(table.players) < table.seats and
+        table.players.getPlayerByAttr('name', user) is None
+    ):
+        account = PokerGameDatabase.accountFromUsername(user)
+        if (account and account.money >= table.minbuyin):
+            return render_template(
+                'template_table', request, 
+                {'username': user, 'table_id': table_id}
+            )
+    return response.redirect('/base')
 
-@app.websocket('/tablefeed')
-async def feed(request, ws):
-    table = game[TABLE_ID]
+@app.websocket('/tablefeed/<integer_arg: table_id>')
+async def feed(request, ws, table_id):
+    table = PokerGame[table_id]
     username = request.cookies.get('username')
     await table.executeTableIn(
         TableCode.PLAYERJOINED,
@@ -160,19 +197,3 @@ async def feed(request, ws):
             TableCode.PLAYERLEFT, 
             username = username
         )
-
-@app.route('/table', methods = ['GET'])
-async def table(request):
-    table = game[TABLE_ID]
-    user = request.cookies.get('username')
-    if (
-        user and len(table.players) < table.seats and
-        table.players.getPlayerByAttr('name', user) is None
-    ):
-        account = dbgame.accountFromUsername(user)
-        if (account and account.money >= table.minbuyin):
-            return render_template(
-                'template_table', request, 
-                {'username': user}
-            )
-    return response.redirect('/base')

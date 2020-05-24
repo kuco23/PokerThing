@@ -47,6 +47,13 @@ class Table:
     def __isub__(self, players):
         self._removePlayers(players)
         return self
+
+    @property
+    def seats_free(self):
+        return (
+            self.seats - len(self.players) - 
+            len(self._player_addition_schedule)
+        )
                     
     @property
     def all_players(self):

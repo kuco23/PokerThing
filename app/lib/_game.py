@@ -68,13 +68,14 @@ class ServerTable(Table):
     PlayerSprite = ServerPlayerGroup
 
     def __init__(
-        self, db, _id, seats, 
+        self, db, _id, name, seats, 
         buyin, minbuyin, small_blind, big_blind
     ):
         super().__init__(
             _id, seats, buyin, minbuyin,
             small_blind, big_blind
         )
+        self.name = name
         self.minbuyin = minbuyin
         self.gamebase = db
         self.round_id = self.gamebase.registerNewRound(_id)
