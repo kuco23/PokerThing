@@ -106,13 +106,13 @@ class PlayerGroup(list):
 
     def getPlayersWithLessMoney(self, money):
         return type(self)(filter(
-            lambda player: player.money < money,
+            lambda player: player.money <= money,
             self
         ))
     
     def getPlayersWithMoreMoney(self, money):
         return type(self)(filter(
-            lambda player: player.money > money,
+            lambda player: player.money >= money,
             self
         ))
 

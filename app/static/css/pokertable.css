@@ -169,3 +169,22 @@ div.player > span:first-child {
 div.player > span:nth-child(2) {
     color: lime;
 }
+
+#cardDisplay span {
+    padding: 5px;
+    color: white;
+    border: 1px solid black;
+}
+
+#cardDisplay span.spade {
+    background-color: rgba(0,0,0,.5);
+}
+#cardDisplay span.heart {
+    background-color: FireBrick;
+}
+#cardDisplay span.diam {
+    background-color: powderblue;
+}
+#cardDisplay span.club {
+    background-color: green;
+}

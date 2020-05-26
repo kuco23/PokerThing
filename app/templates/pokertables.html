@@ -6,7 +6,7 @@
         {% for table in tables %}
             <div href="{{ table['url'] }}" class="p-2 pokerthing-table">
                 <h2 class='table-name'>{{ table['name'] }}</h2>
-                <div>Table Seats: {{ table['seats'] }} / {{ table['seats_free'] }}</div>
+                <div>Table Seats: {{ table['seats_taken'] }} / {{ table['seats'] }}</div>
                 <div>Blinds: {{ table['big_blind'] }} / {{ table['small_blind'] }}</div>
                 <div>Buyin: {{ table['buyin'] }}</div>
             </div>

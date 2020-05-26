@@ -1,20 +1,26 @@
 div.pokerthing-tables {
     display: flex;
     flex-flow: row wrap;
-    justify-content: left;
+    justify-content: center;
 }
 
 div.pokerthing-table {
     margin: 1rem;
     padding: 0rem 2rem 2rem 2rem;
-    border: 1px solid black;
+    color: rgba(255,255,255,.4);
     background-color: rgba(0,0,0,.5);
+    border: 1px solid black;
+    border-radius: 5px;
 }
 
 div.pokerthing-table:hover {
     cursor: pointer;
-    background-color: rgba(0,0,0,3);
-    transition: background-color 0.5s;
+    border: 1px solid orange;
+    transition: border 0.5s;
+}
+div.pokerthing-table:hover > div {
+    color: white;
+    transition: color 0.5s;
 }
 
 h2.table-name {

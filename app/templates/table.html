@@ -59,7 +59,7 @@
     };
     const ClientCode = {
         MESSAGE: -6, 
-        TABLEID: -5,
+        TABLEID: -7,
         FOLD: -5, 
         CHECK: -4, 
         CALL: -3, 
@@ -71,7 +71,7 @@
         '2', '3', '4', '5', '6', '7', '8', 
         '9', '10', 'J', 'Q', 'K', 'A'
     ];
-    const suits = ['♠', '♣', '♦', '♥'];
+    const suits = ['spade', 'heart', 'diam', 'club'];
 
     function makeDiv(text) {
         return "<div>" + text + "</div>";
@@ -91,9 +91,8 @@
             let val = values[x[0]];
             let suit = suits[x[1]];
             node += (
-                "<span>" +
-                    "<span>" + val + "</span>" + 
-                    "<span>" + suit + "</span>" +
+                "<span class='" + suit + "'>" +
+                    val + 
                 "</span>"
             );
         });
@@ -176,9 +175,9 @@
                 break;
             case ServerCode.NEWTURN:
                 serverOut( "New Turn, " + body['turn']);
-                boardCards.html(makeDiv(
+                boardCards.html(
                     formatCards(body['board_cards'])
-                ));
+                );
                 break;
             case ServerCode.DEALTCARDS:
                 playerCards.html(

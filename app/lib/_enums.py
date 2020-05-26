@@ -17,8 +17,8 @@ for e in RoundPrivateOutId:
     extend_enum(ServerGameCode, e.name, e.value)
 
 class ClientGameCode(IntEnum):
+    TABLEID = -7
     MESSAGE = -6
-    TABLEID = -5
 
 for e in RoundPublicInId: 
     extend_enum(ClientGameCode, e.name, e.value)

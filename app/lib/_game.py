@@ -103,9 +103,7 @@ class ServerTable(Table):
     
     async def _onPlayerJoined(self, player_name, sock):
         player_id = self.gamebase.player_id
-        account = self.gamebase.accountFromUsername(
-            player_name
-        )
+        account = self.gamebase.accountFromUsername(player_name)
         buyin = min(account.money, self.buyin)
         self.gamebase.withdrawFromAccount(account.id, buyin)
         self.gamebase.registerPlayer(
