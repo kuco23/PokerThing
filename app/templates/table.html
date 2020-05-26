@@ -59,6 +59,7 @@
     };
     const ClientCode = {
         MESSAGE: -6, 
+        TABLEID: -5,
         FOLD: -5, 
         CHECK: -4, 
         CALL: -3, 
@@ -137,9 +138,14 @@
     }
 
     const ws = new WebSocket(
-        "ws://" + window.location.host + "/tablefeed/" + {{ table_id|safe }}
+        "ws://" + window.location.host + "/tablefeed"
     );
-    ws.onopen = function() {console.log('Socket Opened');};
+    ws.onopen = function() {
+        ws.send(JSON.stringify({
+            id: ClientCode.TABLEID,
+            table_id: Number("{{ table_id|safe }}")
+        }));
+    };
     ws.onclose = function() {console.log('Socket Closed');};
     ws.onmessage = function(rcv) {
         console.log("receiving");

@@ -1,0 +1,26 @@
+div.pokerthing-tables {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: left;
+}
+
+div.pokerthing-table {
+    margin: 1rem;
+    padding: 0rem 2rem 2rem 2rem;
+    border: 1px solid black;
+    background-color: rgba(0,0,0,.5);
+}
+
+div.pokerthing-table:hover {
+    cursor: pointer;
+    background-color: rgba(0,0,0,3);
+    transition: background-color 0.5s;
+}
+
+h2.table-name {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    color: orange;
+    font-family: monospace;
+    text-align: center;
+}

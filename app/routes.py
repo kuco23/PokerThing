@@ -17,13 +17,15 @@ from app import (
 
 from sanic.log import logger
 
-app.static('/css/main.css', 'app/static/css/main.css')
-app.static('/css/base.css', 'app/static/css/base.css')
-app.static('/css/navbar.css', 'app/static/css/navbar.css')
-app.static('/css/forms.css', 'app/static/css/forms.css')
-app.static('/css/database.css', 'app/static/css/database.css')
-app.static('/css/pokertable.css', 'app/static/css/pokertable.css')
-app.static('/favicon.ico', 'app/static/favicon.ico')
+
+app.static('/static', 'app/static')
+
+css_files = ['main', 'base', 'navbar', 'forms', 'database', 'pokertables', 'pokertable']
+css_urls = [
+    app.url_for('static', filename=f'css/{file}.css') for file in css_files
+]
+favicon_url = app.url_for('static', filename='favicon.ico')
+headers = {'css_urls': css_urls, 'favicon_url': favicon_url}
 
 setup(app, loader=DictLoader({
         "template_base": open('app/templates/base.html').read(),
@@ -66,7 +68,7 @@ def userSignup(form):
 @template("template_base")
 async def base(request):
     username = request.cookies.get('username')
-    return {"username" : username}
+    return {"username" : username, **headers}
 
 @app.route("/signup", methods=['GET', 'POST'])
 async def signup(request):
@@ -76,11 +78,11 @@ async def signup(request):
             resp = response.redirect('/base')
             resp.cookies['username'] = request.form.get('username')
             return resp
-        return render_template("template_signin", request, {})
+        return render_template("template_signin", request, headers)
     if request.method == 'GET':
         if request.cookies.get('username'):
             return response.redirect('/base')
-        return render_template('template_signup', request, {})
+        return render_template('template_signup', request, headers)
 
 @app.route('/signin', methods=['GET', 'POST'])
 async def signin(request):
@@ -89,11 +91,11 @@ async def signin(request):
             resp = response.redirect('/base')
             resp.cookies['username'] = request.form.get('username')
             return resp
-        return render_template('template_signin', request, {})
+        return render_template('template_signin', request, headers)
     elif request.method == 'GET':
         if request.cookies.get('username'):
             return response.redirect('/base')
-        return render_template('template_signin', request, {})
+        return render_template('template_signin', request, headers)
 
 @app.route('/signout', methods = ['GET'])
 async def signout(request):
@@ -124,35 +126,32 @@ async def database(request):
         user = request.cookies.get('username')
         return render_template(
             'template_database', 
-            request, {'username': user}
+            request, {'username': user, **headers}
         )
     
 @app.route('/pokertables', methods=['GET'])
 async def pokertables(request):
     user = request.cookies.get('username')
-    table_specs = {
-        table.id: {
-            "attrs": {
-                "table_id": table.id,
-                "table_name": table.name,
-                "table_seats": table.seats,
-                "table_seats_free": table.seats_free,
-                "table_buyin": table.buyin,
-                "table_small_blind": table.small_blind,
-                "table_big_blind": table.big_blind
-            },
-            "table_url": app.url_for("table", table_id=table.id)
-        } for table in PokerGame
-    }
+    tables = [{
+        "id": table.id,
+        "name": table.name,
+        "seats": table.seats,
+        "seats_free": table.seats_free,
+        "buyin": table.buyin,
+        "small_blind": table.small_blind,
+        "big_blind": table.big_blind,
+        "url": app.url_for("table", table_id=table.id)
+    } for table in PokerGame]
     return render_template(
         'template_pokertables', request, 
-        {'username': user, 'table_specs': table_specs}
+        {'username': user, 'tables': tables, **headers}
     )
 
 @app.route('/table/<table_id:number>', methods = ['GET', 'POST'])
 async def table(request, table_id):
     table = PokerGame[table_id]
     user = request.cookies.get('username')
+    logger.info(table_id)
     if (
         user and len(table.players) < table.seats and
         table.players.getPlayerByAttr('name', user) is None
@@ -161,25 +160,27 @@ async def table(request, table_id):
         if (account and account.money >= table.minbuyin):
             return render_template(
                 'template_table', request, 
-                {'username': user, 'table_id': table_id}
+                {'username': user, 'table_id': table_id, **headers}
             )
     return response.redirect('/base')
 
-@app.websocket('/tablefeed/<integer_arg: table_id>')
-async def feed(request, ws, table_id):
-    table = PokerGame[table_id]
+@app.websocket('/tablefeed')
+async def feed(request, ws):
     username = request.cookies.get('username')
-    await table.executeTableIn(
-        TableCode.PLAYERJOINED,
-        username = username, sock = ws
-    )
-    await table.executeTableIn(TableCode.STARTROUND)
+    table = None
     try:
         while True:
             client_data = json.loads(await ws.recv())
             client_code = client_data.get('id')
             logger.info(client_data)
-            if client_code == ClientGameCode.MESSAGE:
+            if client_code == ClientGameCode.TABLEID:
+                table = PokerGame[client_data['table_id']]
+                await table.executeTableIn(
+                    TableCode.PLAYERJOINED,
+                    username = username, sock = ws
+                )
+                await table.executeTableIn(TableCode.STARTROUND)
+            elif client_code == ClientGameCode.MESSAGE:
                 await table.notifyTable({
                     'id': ServerGameCode.MESSAGE,
                     'data': {

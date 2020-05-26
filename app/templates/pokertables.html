@@ -2,18 +2,24 @@
 
 {% block pokertables %}
 
-    <div class="container-fluid">
-        <div class="d-flex flex-row flex-wrap justify-content-center">
-            {% for table in table_specs.values() %}
-                <div class="p-2 pokerthing-table">
-                    {% for name, spec in table["attrs"].items() %}
-                        <span>{{ name }} = {{ spec }}</span>
-                    {% endfor %}
-                    <a href='{{ table["table_url"] }}'>
-                        Go to Table 
-                    </a>
-                </div>
-            {% endfor %}
+    <div class="pokerthing-tables">
+        {% for table in tables %}
+            <div href="{{ table['url'] }}" class="p-2 pokerthing-table">
+                <h2 class='table-name'>{{ table['name'] }}</h2>
+                <div>Table Seats: {{ table['seats'] }} / {{ table['seats_free'] }}</div>
+                <div>Blinds: {{ table['big_blind'] }} / {{ table['small_blind'] }}</div>
+                <div>Buyin: {{ table['buyin'] }}</div>
+            </div>
+        {% endfor %}
     </div>
+
+    <script>
+        'use strict'
+
+        $('div.pokerthing-table').click(function() {
+            window.location.href = $( this ).attr('href');
+        });
+
+    </script>
 
 {% endblock %}
