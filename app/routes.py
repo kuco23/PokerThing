@@ -1,13 +1,13 @@
-import json, sqlite3, time
+import json
 from hashlib import sha256
+
 from jinja2 import DictLoader
 from sanic import response
 from sanic.websocket import ConnectionClosed
+from sanic.exceptions import NotFound
 from jinja2_sanic import template, render_template, setup
-from .lib import (
-    ServerPlayer, TableCode,
-    ServerGameCode, ClientGameCode, ClientDbCode
-)
+
+from .lib import *
 from .lib.database import DbTable, table_enum
 from app import (
     app, config, dbase, PokerGame, 
@@ -139,6 +139,7 @@ async def pokertables(request):
         "seats": table.seats,
         "seats_taken": table.seats - table.seats_free,
         "buyin": table.buyin,
+        "minbuyin": table.minbuyin,
         "small_blind": table.small_blind,
         "big_blind": table.big_blind,
         "url": app.url_for("table", table_id=table.id)
@@ -198,3 +199,7 @@ async def feed(request, ws):
             TableCode.PLAYERLEFT, 
             username = username
         )
+
+@app.exception(NotFound)
+async def ignore_404s(request, exception):
+    return response.redirect("base")

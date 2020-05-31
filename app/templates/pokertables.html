@@ -6,9 +6,9 @@
         {% for table in tables %}
             <div href="{{ table['url'] }}" class="p-2 pokerthing-table">
                 <h2 class='table-name'>{{ table['name'] }}</h2>
-                <div>Table Seats: {{ table['seats_taken'] }} / {{ table['seats'] }}</div>
-                <div>Blinds: {{ table['big_blind'] }} / {{ table['small_blind'] }}</div>
-                <div>Buyin: {{ table['buyin'] }}</div>
+                <div>Seats: {{ table['seats_taken'] }} / {{ table['seats'] }}</div>
+                <div>Blinds: {{ table['small_blind'] }} / {{ table['big_blind'] }}</div>
+                <div>Buyin: {{  table['minbuyin'] }} / {{ table['buyin'] }}</div>
             </div>
         {% endfor %}
     </div>
@@ -16,9 +16,22 @@
     <script>
         'use strict'
 
+        function setEqualWidth (group_selector) {
+            let jqroup = $(group_selector);
+            let max_width = 0;
+            jqroup.each(function(i) {
+                let width = $(jqroup[i]).width();
+                if (width > max_width) max_width = width;
+            });
+            jqroup.width(max_width);
+        }
+
+        setEqualWidth('div.pokerthing-table');
+
         $('div.pokerthing-table').click(function() {
             window.location.href = $( this ).attr('href');
         });
+
 
     </script>
 

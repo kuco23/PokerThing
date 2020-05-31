@@ -110,8 +110,7 @@ class Table:
             if player.money < self.minbuyin:
                 self._player_addition_schedule[player.id] = player
         self.players = self.PlayerSprite(filter(
-            lambda player: player.money >= self.minbuyin,
-            self.players
+            lambda player: player.money > 0, self.players
         ))
         for _id, player in self._player_addition_schedule.items():
             if len(self.players) >= self.seats: break

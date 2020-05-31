@@ -11,7 +11,6 @@
     <div id='pokertableView'>
         <div id='cardDisplay'>
             <div id='boardCards'></div>
-            <div id='playerCards'></div>
         </div>
         <div id='actionIn' class='buttonDisabled'>
             <input type=submit name='check' id='check' value='CHECK' />
@@ -73,6 +72,16 @@
     ];
     const suits = ['spade', 'heart', 'diam', 'club'];
 
+    const pokertableChat = $("#pokertableChat");
+    const message_in = $("#message_in");
+    const message_out = $("#message_out");
+    const message_send = $('#send');
+    const actionIn = $('#actionIn');
+    const boardCards = $('#boardCards');
+    const playerCards = $('#playerCards');
+    const playerList = $('#playerList');
+    const raiseAmount = $('#amount');
+
     function makeDiv(text) {
         return "<div>" + text + "</div>";
     }
@@ -81,7 +90,7 @@
         let nodeCls = (cls != null) ? " class='" + cls + "'" : "";
         let node = "<div" + nodeId + nodeCls + "'>";
         textArray.forEach(function(s) {
-            node += "<spam>" + s + "</spam>";
+            node += "<span>" + s + "</span>";
         });
         return node + "</div>";
     }
@@ -99,23 +108,17 @@
         return node;
     }
     function updataPlayerMoney(player_name, money) {
-        $('#' + player_name + ' > spam:nth-child(3)').text(money);
+        $('#' + player_name + ' > span:nth-child(2)').text(money);
     }
-
-    const pokertableChat = $("#pokertableChat");
-    const message_in = $("#message_in");
-    const message_out = $("#message_out");
-    const message_send = $('#send');
-    const actionIn = $('#actionIn');
-    const boardCards = $('#boardCards');
-    const playerCards = $('#playerCards');
-    const playerList = $('#playerList');
-    const raiseAmount = $('#amount');
+    function updatePlayerCards(player_name, cards) {
+        let fcards = formatCards(cards);
+        $('#' + player_name + ' > span:nth-child(3)').html(fcards);
+    }
 
     function serverOut(message) {
         message_out.append(divOfSpam([
             "Server", message
-        ], null, "message"));
+        ], null, "message black"));
     }
     function resetPlayerBoard(players) {
         playerList.html("");
@@ -123,7 +126,8 @@
             let player = players[i];
             playerList.append(divOfSpam([
                 player['name'],
-                player['money']
+                player['money'],
+                ""
             ], player['name'], "player"));
         }
     }
@@ -157,7 +161,6 @@
                     body['username'], 
                     body['message']
                 ], null, "message"));
-                message_out.scrollIntoView(true);
                 break;
             case ServerCode.PLAYERSETUP:
                 resetPlayerBoard(body['players_data']);
@@ -180,8 +183,9 @@
                 );
                 break;
             case ServerCode.DEALTCARDS:
-                playerCards.html(
-                    formatCards(body['player_cards'])
+                updatePlayerCards(
+                    body['player_name'], 
+                    body['player_cards']
                 );
                 break;
             case ServerCode.SMALLBLIND:
@@ -208,7 +212,6 @@
                 break;
             case ServerCode.PLAYERCHECK:
                 serverOut(body['player_name'] + ' checks');
-                disablePlayerIn();
                 break;
             case ServerCode.PLAYERCALL:
                 updataPlayerMoney(
@@ -219,14 +222,12 @@
                     body['player_name'] + ' calls ' + 
                     body['called']
                 );
-                disablePlayerIn();
                 break;
             case ServerCode.PLAYERFOLD:
                 serverOut(
                     body['player_name'] + 
                     ' folds'
                 );
-                disablePlayerIn();
                 break;
             case ServerCode.PLAYERRAISE:
                 updataPlayerMoney(
@@ -238,7 +239,6 @@
                     ' raised ' + 
                     body['raised_by']
                 );
-                disablePlayerIn();
                 break;
             case ServerCode.PLAYERALLIN:
                 updataPlayerMoney(
@@ -250,14 +250,14 @@
                     ' went all in with ' + 
                     body['allin_stake']
                 );
-                disablePlayerIn();
                 break;
             case ServerCode.PLAYERACTIONREQUIRED:
+                console.log("action required");
+                console.log(body);
                 serverOut(
                     body['player_name'] +  ', ' +
                     body['to_call'] + ' to call'
                 );
-                enablePlayerIn();
                 break;
             case ServerCode.PUBLICCARDSHOW:
                 serverOut(
@@ -319,13 +319,11 @@
     $('#raise').click(function() {
         let raised_by = raiseAmount.val();
         if (!isNaN(raised_by)) {
-            raised_by.text("");
             ws.send(JSON.stringify({
                 id: ClientCode.RAISE,
-                data: {
-                    raised_by: parseInt(raised_by)
-                }
+                data: {raised_by: parseInt(raised_by)}
             }));
+            raiseAmount.val("");
         }
     });
     $('#allin').click(function() {

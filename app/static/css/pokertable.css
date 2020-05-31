@@ -93,16 +93,6 @@
     border-top-left-radius: 0.2rem;
     border-bottom-right-radius: 0.2rem;
 }
-.buttonDisabled input {color: gray;}
-.buttonDisabled input:hover {
-    cursor: default;
-    color: gray;
-    background-color: rgba(0,0,0,.4);
-}
-.buttonEnabled input {color: white;}
-.buttonEnabled input:hover {
-    color: orange;
-}
 
 #boardCards > span {
     color: orange;
@@ -146,7 +136,7 @@
 
 div.message {
     padding: 0.2rem;
-    font-size: 1.2rem;
+    font-size: 13px;
     text-align: left;
 }
 div.message > span:first-child {
@@ -158,33 +148,63 @@ div.message > span:last-child {
 }
 
 div.player {
-    padding: 0.2rem;
-    font-size: 1.2rem;
+    margin: 0.5rem;
+    padding: 0.5rem;
+    font-size: 13px;
     text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,.3);
 }
-div.player > span:first-child {
+div.player > span {
+    margin: 0.5rem;
+    padding: 0.5rem;
+}
+div.player span:first-child {
     color: orange;
-    padding-right: 0.5rem;
 }
-div.player > span:nth-child(2) {
+div.player span:nth-child(2) {
     color: lime;
 }
 
-#cardDisplay span {
-    padding: 5px;
+#boardCards > span, div.player > span:nth-child(3) > span {
+    padding: 0.5rem;
     color: white;
     border: 1px solid black;
 }
 
-#cardDisplay span.spade {
+span.spade {
     background-color: rgba(0,0,0,.5);
 }
-#cardDisplay span.heart {
+span.heart {
     background-color: FireBrick;
 }
-#cardDisplay span.diam {
-    background-color: powderblue;
+span.diam {
+    background-color: blueviolet;
 }
-#cardDisplay span.club {
+span.club {
     background-color: green;
+}
+
+@keyframes trip {
+    0% {border: 1px solid rgba(255,255,255,.5);}
+    100% {border: 1px solid transparent;}
+}
+
+div.buttonDisabled {
+    animation: none;
+}
+.buttonDisabled input:hover {
+    cursor: not-allowed;
+    color: transparent;
+}
+div.buttonEnabled {
+    animation: trip 1s linear 0s infinite alternate;
+    transition: border 0.3s;
+}
+.buttonEnabled input:hover {
+    cursor: pointer;
+    color: orange;
+}
+
+div.black > span {
+    color: gray;
 }

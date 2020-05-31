@@ -24,8 +24,7 @@ div.pokerthing-table:hover > div {
 }
 
 h2.table-name {
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
+    padding: 0.5rem 0rem 0.5rem 0rem;
     color: orange;
     font-family: monospace;
     text-align: center;

@@ -50,36 +50,28 @@
 		PlayerActions: 'playeractions'
 	};
 
-	let table_option = $('#table-select');
-	let table_options = $('#table-select > option');
 	let table_out = $('#table-out');
-	let table_search = $('#table-search');
 	let table = null;
 
-	function serverSend(json, callback) {
-		$.ajax('/database', {
-            type: 'POST',
-            contentType: 'application/json; charset=utf-8',
-            dataType: 'json',
-            data: json,
-            timeout: 2000,
-            success: function (data, status, xhr) {
-				table = data;
-				callback(data);
-			},
-            error: function (jqXhr, textStatus, errorMessage) {
-				console.log("Error");
-			},
-		});
+	function searchTable(data_table, pattern) {
+		let selected = [];
+		data_table.rows.forEach(function(row) {
+			for (let i = 0; i < row.length; i++)
+				if (String(row[i]).includes(pattern)) {
+					selected.push(row);
+					break;
+				}
+		}); 
+		return selected;
 	}
 
-	function fillTable(data) {
+	function fillTable(data_table) {
 		table_out.html('<tr>');
-		data.columns.forEach(function(x) {
+		data_table.columns.forEach(function(x) {
 			table_out.append('<th>' + x + '</th>');
 		});
 		table_out.append('</tr>');
-		data.rows.forEach(function(row) {
+		data_table.rows.forEach(function(row) {
 			table_out.append('<tr>');
 			row.forEach(function (td) {
 				table_out.append('<td>' + td + '</td>');
@@ -88,35 +80,35 @@
 		});
 	}
 
-	table_options.click(function() {
+	$('#table-select > option').click(function() {
 		let option = $( this ).text();
-		let data = JSON.stringify({
+		let json = JSON.stringify({
 			id: ClientCode.GETTABLE,
-			data: {
-				table: DbTable[option]
+			data: {table: DbTable[option]}
+		});
+		$.ajax('/database', {
+            type: 'POST',
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json',
+            data: json,
+            timeout: 2000,
+            success: function (data, status, xhr) {
+				table = data;
+				fillTable(data);
+			},
+            error: function (jqXhr, status, msg) {
+				console.log("Error");
 			}
 		});
-		serverSend(data, fillTable);
 	});
 
-	table_search.on("change paste keyup", function() {
+	$('#table-search').on("change paste keyup", function() {
 		if (table == null) return;
-		let search = $( this ).val();
-		let selected = [];
-		table.rows.forEach(function(row) {
-			for (let i = 0; i < row.length; i++) {
-				if (String(row[i]).includes(search)) {
-					selected.push(row);
-					break;
-				}
-			}
-		});
 		fillTable({
 			columns: table.columns,
-			rows: selected
+			rows: searchTable(table, $( this ).val())
 		});
 	});
 	
-		
 </script>
 {% endblock %}
